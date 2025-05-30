@@ -16,6 +16,7 @@
 		"@uiw/codemirror-theme-vscode": "^4.19.16",
 		"@uiw/react-codemirror": "^4.19.16",
 		"assert": "^2.0.0",
+		"dotenv": "^16.5.0",
 		"eslint": "8.36.0",
 		"eslint-config-next": "13.2.4",
 		"firebase": "^9.23.0",

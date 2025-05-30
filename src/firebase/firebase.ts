@@ -1,28 +1,67 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, FirebaseOptions } from "firebase/app";
+import { getAuth, initializeAuth, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-const firebaseConfig = {
-	apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
-	authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
-	projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
-	storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
-	messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
-	appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+// Explicitly import dotenv to ensure environment variables are loaded
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
+// Hardcoded configuration as a fallback
+const FALLBACK_CONFIG: FirebaseOptions = {
+	apiKey: 'AIzaSyDhoR2EA3uuWqWSkiiE5G1vRkeqoGHBdro',
+	authDomain: 'elitecode-47058.firebaseapp.com',
+	projectId: 'elitecode-47058',
+	storageBucket: 'elitecode-47058.firebasestorage.app',
+	messagingSenderId: '605884776680',
+	appId: '1:605884776680:web:f89db0d49b021139dec95d'
 };
 
-// Ensure all required config values are present
-const isValidConfig = Object.values(firebaseConfig).every(value => value !== '');
+// Construct Firebase configuration
+const firebaseConfig: FirebaseOptions = {
+	apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || FALLBACK_CONFIG.apiKey,
+	authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || FALLBACK_CONFIG.authDomain,
+	projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || FALLBACK_CONFIG.projectId,
+	storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || FALLBACK_CONFIG.storageBucket,
+	messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || FALLBACK_CONFIG.messagingSenderId,
+	appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || FALLBACK_CONFIG.appId,
+};
 
-if (!isValidConfig) {
-	console.error('Invalid Firebase configuration. Please check your .env.local file.');
-	throw new Error('Firebase configuration is incomplete');
+// Validate configuration
+const validateConfig = (config: FirebaseOptions) => {
+	const requiredKeys: (keyof FirebaseOptions)[] = [
+		'apiKey', 'authDomain', 'projectId', 
+		'storageBucket', 'messagingSenderId', 'appId'
+	];
+
+	const missingKeys = requiredKeys.filter(key => !config[key]);
+	
+	if (missingKeys.length > 0) {
+		console.error('Missing Firebase configuration keys:', missingKeys);
+		console.error('Current configuration:', config);
+		throw new Error(`Firebase configuration is incomplete. Missing: ${missingKeys.join(', ')}`);
+	}
+
+	// Additional validation
+	if (!config.apiKey || config.apiKey.trim() === '') {
+		throw new Error('Firebase API Key is empty or invalid');
+	}
+};
+
+try {
+	// Validate configuration before using it
+	validateConfig(firebaseConfig);
+} catch (error) {
+	throw error;
 }
 
 // Prevent multiple app initializations
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-const auth = getAuth(app);
+// Initialize auth with explicit persistence
+const auth = initializeAuth(app, {
+	persistence: browserLocalPersistence
+});
+
 const firestore = getFirestore(app);
 
 export { auth, firestore, app };

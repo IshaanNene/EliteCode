@@ -6,6 +6,7 @@ import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
 import { useRouter } from "next/router";
 import { doc, setDoc } from "firebase/firestore";
 import { toast } from "react-toastify";
+import { FirebaseError } from "firebase/app";
 
 type SignupProps = {};
 
@@ -25,9 +26,25 @@ const Signup: React.FC<SignupProps> = () => {
 		e.preventDefault();
 		if (!inputs.email || !inputs.password || !inputs.displayName) return alert("Please fill all fields");
 		try {
+			console.log('Attempting to create user with:', { 
+				email: inputs.email, 
+				displayName: inputs.displayName 
+			});
+			
+			// Log auth object details for debugging
+			console.log('Auth object details:', {
+				app: auth.app,
+				config: auth.app.options,
+				currentUser: auth.currentUser,
+				tenantId: auth.tenantId,
+			});
+
 			toast.loading("Creating your account", { position: "top-center", toastId: "loadingToast" });
 			const newUser = await createUserWithEmailAndPassword(inputs.email, inputs.password);
-			if (!newUser) return;
+			if (!newUser) {
+				console.error('No user returned from createUserWithEmailAndPassword');
+				return;
+			}
 			const userData = {
 				uid: newUser.user.uid,
 				email: newUser.user.email,
@@ -42,14 +59,40 @@ const Signup: React.FC<SignupProps> = () => {
 			await setDoc(doc(firestore, "users", newUser.user.uid), userData);
 			router.push("/");
 		} catch (error: any) {
-			toast.error(error.message, { position: "top-center" });
+			// Detailed error logging
+			if (error instanceof FirebaseError) {
+				console.error('Firebase Authentication Error:', {
+					code: error.code,
+					message: error.message,
+					name: error.name,
+					stack: error.stack,
+					customData: error.customData,
+				});
+			} else {
+				console.error('Unknown error during signup:', error);
+			}
+
+			// Specific error handling
+			switch (error.code) {
+				case 'auth/configuration-not-found':
+					toast.error('Firebase configuration is missing or incorrect. Please contact support.', { position: "top-center" });
+					break;
+				case 'auth/invalid-api-key':
+					toast.error('Invalid Firebase API key. Please check your configuration.', { position: "top-center" });
+					break;
+				default:
+					toast.error(error.message, { position: "top-center" });
+			}
 		} finally {
 			toast.dismiss("loadingToast");
 		}
 	};
 
 	useEffect(() => {
-		if (error) alert(error.message);
+		if (error) {
+			console.error('Hook error:', error);
+			alert(error.message);
+		}
 	}, [error]);
 
 	return (
