@@ -11,22 +11,20 @@ const Navbar: React.FC<NavbarProps> = () => {
 		setAuthModalState((prev) => ({ ...prev, isOpen: true }));
 	};
 	return (
-		<div className='flex items-center justify-between sm:px-12 px-2 md:px-24'>
-			<Link href='/' className='flex items-center justify-center h-20'>
-				<Image src='/logo.png' alt='LeetClone' height={200} width={200} />
+		<nav className="sticky top-0 z-50 w-full bg-white/10 backdrop-blur-lg shadow-md rounded-b-2xl px-4 py-2 flex items-center justify-between">
+			<Link href="/" className="flex items-center h-16">
+				<Image src="/logo.png" alt="EliteCode" height={48} width={48} className="rounded-xl shadow" />
+				<span className="ml-3 text-2xl font-extrabold text-white tracking-wide hidden sm:inline">EliteCode</span>
 			</Link>
-			<div className='flex items-center'>
+			<div className="flex items-center">
 				<button
-					className='bg-brand-orange text-white px-2 py-1 sm:px-4 rounded-md text-sm font-medium
-                hover:text-brand-orange hover:bg-white hover:border-2 hover:border-brand-orange border-2 border-transparent
-                transition duration-300 ease-in-out
-                '
+					className="bg-gradient-to-r from-brand-orange to-pink-500 text-white px-5 py-2 rounded-lg text-base font-semibold shadow hover:from-pink-500 hover:to-brand-orange transition-all duration-300 border-2 border-transparent hover:border-brand-orange"
 					onClick={handleClick}
 				>
 					Sign In
 				</button>
 			</div>
-		</div>
+		</nav>
 	);
 };
 export default Navbar;

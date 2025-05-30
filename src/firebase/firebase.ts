@@ -2,11 +2,9 @@ import { initializeApp, getApps, FirebaseOptions } from "firebase/app";
 import { getAuth, initializeAuth, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// Explicitly import dotenv to ensure environment variables are loaded
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
-// Hardcoded configuration as a fallback
 const FALLBACK_CONFIG: FirebaseOptions = {
 	apiKey: 'AIzaSyDhoR2EA3uuWqWSkiiE5G1vRkeqoGHBdro',
 	authDomain: 'elitecode-47058.firebaseapp.com',
@@ -16,7 +14,6 @@ const FALLBACK_CONFIG: FirebaseOptions = {
 	appId: '1:605884776680:web:f89db0d49b021139dec95d'
 };
 
-// Construct Firebase configuration
 const firebaseConfig: FirebaseOptions = {
 	apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || FALLBACK_CONFIG.apiKey,
 	authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || FALLBACK_CONFIG.authDomain,
@@ -48,7 +45,6 @@ const validateConfig = (config: FirebaseOptions) => {
 };
 
 try {
-	// Validate configuration before using it
 	validateConfig(firebaseConfig);
 } catch (error) {
 	throw error;

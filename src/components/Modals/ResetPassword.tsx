@@ -21,33 +21,40 @@ const ResetPassword: React.FC<ResetPasswordProps> = () => {
 		}
 	}, [error]);
 	return (
-		<form className='space-y-6 px-6 lg:px-8 pb-4 sm:pb-6 xl:pb-8' onSubmit={handleReset}>
-			<h3 className='text-xl font-medium  text-white'>Reset Password</h3>
-			<p className='text-sm text-white '>
-				Forgotten your password? Enter your e-mail address below, and we&apos;ll send you an e-mail allowing you
-				to reset it.
+		<form className="space-y-7 px-2 py-2" onSubmit={handleReset}>
+			<h3 className="text-2xl font-extrabold text-center text-blue-400 mb-2">Reset Your Password</h3>
+			<p className="text-base text-white/80 text-center mb-4">
+				Forgotten your password? Enter your e-mail address below, and we&apos;ll send you an e-mail allowing you to reset it.
 			</p>
 			<div>
-				<label htmlFor='email' className='text-sm font-medium block mb-2 text-gray-300'>
+				<label htmlFor="email" className="text-sm font-medium block mb-2 text-white/80">
 					Your email
 				</label>
 				<input
-					type='email'
-					name='email'
+					type="email"
+					name="email"
 					onChange={(e) => setEmail(e.target.value)}
-					id='email'
-					className='border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 bg-gray-600 border-gray-500 placeholder-gray-400 text-white'
-					placeholder='name@company.com'
+					id="email"
+					className="border-none outline-none sm:text-sm rounded-lg focus:ring-2 focus:ring-blue-400 block w-full p-3 bg-white/20 text-white placeholder-white/60 shadow-inner transition-all"
+					placeholder="name@company.com"
 				/>
 			</div>
 
 			<button
-				type='submit'
-				className={`w-full text-white  focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center 
-                bg-brand-orange hover:bg-brand-orange-s `}
+				type="submit"
+				className="w-full text-white font-bold rounded-lg text-base px-5 py-3 mt-2 bg-gradient-to-r from-blue-400 to-brand-orange shadow-lg hover:from-brand-orange hover:to-blue-400 transition-all duration-300"
 			>
-				Reset Password
+				{sending ? "Sending..." : "Reset Password"}
 			</button>
+
+			<div className="flex items-center my-4">
+				<hr className="flex-grow border-t border-white/20" />
+				<span className="mx-2 text-white/40 text-xs">or</span>
+				<hr className="flex-grow border-t border-white/20" />
+			</div>
+			<div className="flex justify-center mt-4 text-sm">
+				<button type="button" className="text-brand-orange hover:underline" onClick={() => window.dispatchEvent(new CustomEvent('auth-modal-switch', { detail: { type: 'login' } }))}>Back to Login</button>
+			</div>
 		</form>
 	);
 };

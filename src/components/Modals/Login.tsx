@@ -35,59 +35,58 @@ const Login: React.FC<LoginProps> = () => {
 		if (error) toast.error(error.message, { position: "top-center", autoClose: 3000, theme: "dark" });
 	}, [error]);
 	return (
-		<form className='space-y-6 px-6 pb-4' onSubmit={handleLogin}>
-			<h3 className='text-xl font-medium text-white'>Sign in to LeetClone</h3>
-			<div>
-				<label htmlFor='email' className='text-sm font-medium block mb-2 text-gray-300'>
-					Your Email
-				</label>
-				<input
-					onChange={handleInputChange}
-					type='email'
-					name='email'
-					id='email'
-					className='
-            border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
-            bg-gray-600 border-gray-500 placeholder-gray-400 text-white
-        '
-					placeholder='name@company.com'
-				/>
-			</div>
-			<div>
-				<label htmlFor='password' className='text-sm font-medium block mb-2 text-gray-300'>
-					Your Password
-				</label>
-				<input
-					onChange={handleInputChange}
-					type='password'
-					name='password'
-					id='password'
-					className='
-            border-2 outline-none sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
-            bg-gray-600 border-gray-500 placeholder-gray-400 text-white
-        '
-					placeholder='*******'
-				/>
+		<form className="space-y-7 px-2 py-2" onSubmit={handleLogin}>
+			<h3 className="text-2xl font-extrabold text-center text-brand-orange mb-2">Sign in to EliteCode</h3>
+			<div className="space-y-4">
+				<div>
+					<label htmlFor="email" className="text-sm font-medium block mb-2 text-white/80">
+						Email
+					</label>
+					<input
+						onChange={handleInputChange}
+						type="email"
+						name="email"
+						id="email"
+						className="border-none outline-none sm:text-sm rounded-lg focus:ring-2 focus:ring-brand-orange block w-full p-3 bg-white/20 text-white placeholder-white/60 shadow-inner transition-all"
+						placeholder="name@company.com"
+					/>
+				</div>
+				<div>
+					<label htmlFor="password" className="text-sm font-medium block mb-2 text-white/80">
+						Password
+					</label>
+					<input
+						onChange={handleInputChange}
+						type="password"
+						name="password"
+						id="password"
+						className="border-none outline-none sm:text-sm rounded-lg focus:ring-2 focus:ring-brand-orange block w-full p-3 bg-white/20 text-white placeholder-white/60 shadow-inner transition-all"
+						placeholder="*******"
+					/>
+				</div>
 			</div>
 
 			<button
-				type='submit'
-				className='w-full text-white focus:ring-blue-300 font-medium rounded-lg
-                text-sm px-5 py-2.5 text-center bg-brand-orange hover:bg-brand-orange-s
-            '
+				type="submit"
+				className="w-full text-white font-bold rounded-lg text-base px-5 py-3 mt-2 bg-gradient-to-r from-brand-orange to-pink-500 shadow-lg hover:from-pink-500 hover:to-brand-orange transition-all duration-300"
 			>
 				{loading ? "Loading..." : "Log In"}
 			</button>
-			<button className='flex w-full justify-end' onClick={() => handleClick("forgotPassword")}>
-				<a href='#' className='text-sm block text-brand-orange hover:underline w-full text-right'>
-					Forgot Password?
-				</a>
-			</button>
-			<div className='text-sm font-medium text-gray-300'>
-				Not Registered?{" "}
-				<a href='#' className='text-blue-700 hover:underline' onClick={() => handleClick("register")}>
-					Create account
-				</a>
+
+			<div className="flex items-center my-4">
+				<hr className="flex-grow border-t border-white/20" />
+				<span className="mx-2 text-white/40 text-xs">or</span>
+				<hr className="flex-grow border-t border-white/20" />
+			</div>
+			{/* Social login placeholder */}
+			<div className="flex flex-col gap-2">
+				<button type="button" className="w-full py-2 rounded-lg bg-white/20 text-white font-medium hover:bg-white/40 transition-all">Continue with Google</button>
+				{/* Add more social logins here if needed */}
+			</div>
+
+			<div className="flex justify-between mt-4 text-sm">
+				<button type="button" className="text-brand-orange hover:underline" onClick={() => handleClick("forgotPassword")}>Forgot Password?</button>
+				<span className="text-white/70">Not Registered? <button type="button" className="text-blue-400 hover:underline" onClick={() => handleClick("register")}>Create account</button></span>
 			</div>
 		</form>
 	);

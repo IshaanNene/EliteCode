@@ -5,6 +5,7 @@ import useHasMounted from "@/hooks/useHasMounted";
 // import { firestore } from "@/firebase/firebase";
 // import { doc, setDoc } from "firebase/firestore";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function Home() {
 	const [loadingProblems, setLoadingProblems] = useState(true);
@@ -47,59 +48,55 @@ export default function Home() {
 
 	return (
 		<>
-			<main className='bg-dark-layer-2 min-h-screen'>
+			<main className="min-h-screen bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#0a0a23]">
 				<Topbar />
-				<h1
-					className='text-2xl text-center text-gray-700 dark:text-gray-400 font-medium
-					uppercase mt-10 mb-5'
-				>
-					&ldquo; QUALITY OVER QUANTITY &rdquo; 👇
-				</h1>
-				<div className='relative overflow-x-auto mx-auto px-6 pb-10'>
+
+				{/* Hero Section */}
+				<section className="w-full flex flex-col items-center justify-center py-16 px-4 bg-gradient-to-r from-brand-orange/80 to-pink-600/80 shadow-lg">
+					<h1 className="text-4xl md:text-5xl font-extrabold text-white text-center drop-shadow-lg mb-4">
+						Level Up Your Coding Skills
+					</h1>
+					<p className="text-lg md:text-2xl text-white/90 text-center max-w-2xl mb-6">
+						Practice hand-picked coding problems, track your progress, and ace your next technical interview.
+					</p>
+					<Link href="#problems">
+						<button className="bg-white text-brand-orange font-semibold px-8 py-3 rounded-full shadow-lg hover:bg-brand-orange hover:text-white transition-all duration-300 text-lg">
+							Get Started
+						</button>
+					</Link>
+				</section>
+
+				{/* Main Heading */}
+				<h2 className="text-2xl md:text-3xl text-center text-gray-200 font-semibold uppercase mt-12 mb-2 tracking-wide">
+					&ldquo; Quality Over Quantity &rdquo;
+				</h2>
+				<p className="text-center text-gray-400 mb-8 text-base md:text-lg">
+					Curated problems, real interview experience.
+				</p>
+
+				{/* Problems Table */}
+				<div id="problems" className="relative overflow-x-auto mx-auto px-2 pb-10 max-w-5xl">
 					{loadingProblems && (
-						<div className='max-w-[1200px] mx-auto sm:w-7/12 w-full animate-pulse'>
+						<div className="max-w-4xl mx-auto w-full animate-pulse">
 							{[...Array(10)].map((_, idx) => (
 								<LoadingSkeleton key={idx} />
 							))}
 						</div>
 					)}
-					<table className='text-sm text-left text-gray-500 dark:text-gray-400 sm:w-7/12 w-full max-w-[1200px] mx-auto'>
+					<table className="text-sm text-left text-gray-300 w-full rounded-2xl shadow-2xl overflow-hidden bg-dark-layer-2 border border-dark-fill-3">
 						{!loadingProblems && (
-							<thead className='text-xs text-gray-700 uppercase dark:text-gray-400 border-b '>
+							<thead className="text-xs text-gray-200 uppercase bg-dark-fill-3 border-b border-dark-fill-2">
 								<tr>
-									<th scope='col' className='px-1 py-3 w-0 font-medium'>
-										Status
-									</th>
-									<th scope='col' className='px-6 py-3 w-0 font-medium'>
-										Title
-									</th>
-									<th scope='col' className='px-6 py-3 w-0 font-medium'>
-										Difficulty
-									</th>
-
-									<th scope='col' className='px-6 py-3 w-0 font-medium'>
-										Category
-									</th>
-									<th scope='col' className='px-6 py-3 w-0 font-medium'>
-										Solution
-									</th>
+									<th scope="col" className="px-1 py-3 w-0 font-semibold">Status</th>
+									<th scope="col" className="px-6 py-3 w-0 font-semibold">Title</th>
+									<th scope="col" className="px-6 py-3 w-0 font-semibold">Difficulty</th>
+									<th scope="col" className="px-6 py-3 w-0 font-semibold">Category</th>
+									<th scope="col" className="px-6 py-3 w-0 font-semibold">Solution</th>
 								</tr>
 							</thead>
 						)}
 						<ProblemsTable setLoadingProblems={setLoadingProblems} />
 					</table>
-					
-					{/* Commented out Temporary Form for Adding Problems */}
-					{/* <form className="p-6 flex flex-col max-w-sm gap-3" onSubmit={handleSubmit}>
-						<input onChange={handleInputChange} type="text" placeholder="problem id" name="id" />
-						<input onChange={handleInputChange} type="text" placeholder="title" name="title" />
-						<input onChange={handleInputChange} type="text" placeholder="difficulty" name="difficulty"/>
-						<input onChange={handleInputChange} type="text" placeholder="category" name="category" />
-						<input onChange={handleInputChange} type="text" placeholder="order" name="order" />
-						<input onChange={handleInputChange} type="text" placeholder="videoId?" name="videoId" />
-						<input onChange={handleInputChange} type="text" placeholder="link?" name="link" />
-						<button className="bg-white">save to DB</button>
-					</form> */}
 				</div>
 			</main>
 		</>
@@ -108,12 +105,12 @@ export default function Home() {
 
 const LoadingSkeleton = () => {
 	return (
-		<div className='flex items-center space-x-12 mt-4 px-6'>
-			<div className='w-6 h-6 shrink-0 rounded-full bg-dark-layer-1'></div>
-			<div className='h-4 sm:w-52  w-32  rounded-full bg-dark-layer-1'></div>
-			<div className='h-4 sm:w-52  w-32 rounded-full bg-dark-layer-1'></div>
-			<div className='h-4 sm:w-52 w-32 rounded-full bg-dark-layer-1'></div>
-			<span className='sr-only'>Loading...</span>
+		<div className="flex items-center space-x-12 mt-4 px-6">
+			<div className="w-6 h-6 shrink-0 rounded-full bg-dark-layer-1"></div>
+			<div className="h-4 sm:w-52  w-32  rounded-full bg-dark-layer-1"></div>
+			<div className="h-4 sm:w-52  w-32 rounded-full bg-dark-layer-1"></div>
+			<div className="h-4 sm:w-52 w-32 rounded-full bg-dark-layer-1"></div>
+			<span className="sr-only">Loading...</span>
 		</div>
 	);
 };
