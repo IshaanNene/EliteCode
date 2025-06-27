@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar"
 export const metadata: Metadata = {
   title: "EliteCode - Master the Art of Programming",
   description: "A premium coding challenge platform where elite programmers compete and excel",
-    generator: 'v0.dev'
+    generator: 'ishaannene'
 }
 
 export default function RootLayout({

@@ -1,72 +1,131 @@
-export async function executeCode(code: string, language: string, testCases: any[]) {
-  // Simulate realistic code execution with language-specific behavior
-  const delay = (ms: number) => Promise.resolve(setTimeout(() => {}, ms))
+// This approach uses local Docker execution instead of Cloud Run
+// Better for development and simpler deployment
 
-  await delay(1000 + Math.random() * 1500) // Random delay 1-2.5 seconds
+const fetch: (...args: [string, any?]) => Promise<any> = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+import { v4 as uuidv4 } from 'uuid';
 
-  // Language-specific validation
-  const languageValidation = validateCodeByLanguage(code, language)
-  if (!languageValidation.valid) {
+interface ExecutionResult {
+  success: boolean;
+  output: string;
+  runtime: number;
+  memory: number;
+  score?: number;
+}
+
+interface Judge0Submission {
+  stdout?: string;
+  time?: string;
+  memory?: number;
+  stderr?: string;
+  compile_output?: string;
+  message?: string;
+}
+
+const JUDGE0_API_URL = 'https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true';
+const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY || '';
+
+const languageMap: Record<string, number> = {
+  javascript: 63, // Node.js
+  python: 71,     // Python 3
+  java: 62,       // Java
+  cpp: 54,        // C++ (GCC 9.2.0)
+};
+
+export async function executeCode(
+  code: string,
+  language: string,
+  testCases: { input: any; expected: any }[]
+): Promise<ExecutionResult> {
+  const languageId = languageMap[language];
+  if (!languageId) {
     return {
       success: false,
-      output: `❌ ${languageValidation.error}`,
+      output: `❌ Language '${language}' is not supported by Judge0.`,
       runtime: 0,
       memory: 0,
-    }
+    };
   }
 
-  // Simulate test case execution
-  const results = []
-  let passedTests = 0
+  let allPassed = true;
+  let output = '';
+  let totalRuntime = 0;
+  let maxMemory = 0;
 
   for (let i = 0; i < testCases.length; i++) {
-    const testCase = testCases[i]
-    const passed = Math.random() > 0.3 // 70% chance of passing each test
+    const testCase = testCases[i];
+    const stdin = typeof testCase.input === 'string' ? testCase.input : JSON.stringify(testCase.input);
+    const expectedOutput = typeof testCase.expected === 'string' ? testCase.expected : JSON.stringify(testCase.expected);
 
-    if (passed) {
-      passedTests++
-      results.push({
-        testCase: i + 1,
-        status: "✅ PASSED",
-        input: JSON.stringify(testCase.input),
-        expected: JSON.stringify(testCase.expected),
-        actual: JSON.stringify(testCase.expected), // Simulate correct output
-        runtime: Math.floor(Math.random() * 50) + 10,
-      })
-    } else {
-      results.push({
-        testCase: i + 1,
-        status: "❌ FAILED",
-        input: JSON.stringify(testCase.input),
-        expected: JSON.stringify(testCase.expected),
-        actual: generateWrongOutput(testCase.expected),
-        runtime: Math.floor(Math.random() * 100) + 20,
-      })
-      break // Stop at first failure
+    const submission: Judge0Submission = await submitToJudge0(code, languageId, stdin);
+    totalRuntime += submission.time ? Math.round(Number(submission.time) * 1000) : 0;
+    maxMemory = Math.max(maxMemory, submission.memory || 0);
+
+    let actualOutput = (submission.stdout || '').trim();
+    let passed = actualOutput === expectedOutput;
+
+    output += `Test Case ${i + 1}: ${passed ? '✅ PASSED' : '❌ FAILED'}\n`;
+    output += `  Input: ${stdin}\n`;
+    output += `  Expected: ${expectedOutput}\n`;
+    output += `  Your Output: ${actualOutput}\n`;
+    output += `  Runtime: ${submission.time ? Math.round(Number(submission.time) * 1000) : 0}ms\n`;
+    output += `  Memory: ${submission.memory || 0}KB\n\n`;
+
+    if (!passed) {
+      allPassed = false;
+      break; // Stop at first failure
     }
   }
-
-  const allPassed = passedTests === testCases.length
-  const runtime = Math.floor(Math.random() * 200) + 50
-  const memory = Math.floor(Math.random() * 20) + 30
 
   if (allPassed) {
-    const score = calculateScore(runtime, memory, code.length, language)
+    output = `🎉 All ${testCases.length} test cases passed!\n\n` + output;
     return {
       success: true,
-      output: generateSuccessOutput(results, runtime, memory, language),
-      runtime,
-      memory,
-      score,
-    }
+      output,
+      runtime: totalRuntime,
+      memory: maxMemory,
+      score: calculateScore(totalRuntime, maxMemory, code.length, language),
+    };
   } else {
+    output = `❌ Some test cases failed.\n\n` + output;
     return {
       success: false,
-      output: generateFailureOutput(results, passedTests, testCases.length),
-      runtime: 0,
-      memory: 0,
-    }
+      output,
+      runtime: totalRuntime,
+      memory: maxMemory,
+    };
   }
+}
+
+async function submitToJudge0(source_code: string, language_id: number, stdin: string): Promise<Judge0Submission> {
+  const response = await fetch(JUDGE0_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-RapidAPI-Key': JUDGE0_API_KEY,
+      'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+    },
+    body: JSON.stringify({
+      source_code,
+      language_id,
+      stdin,
+    }),
+  });
+  return await response.json() as Judge0Submission;
+}
+
+function calculateScore(runtime: number, memory: number, codeLength: number, language: string): number {
+  const languageMultiplier = {
+    javascript: 1.0,
+    python: 0.9,
+    java: 1.1,
+    cpp: 1.2,
+  };
+  const runtimeScore = Math.max(0, 100 - runtime / 3);
+  const memoryScore = Math.max(0, 100 - memory / 2);
+  const efficiencyScore = Math.max(0, 100 - codeLength / 15);
+  const baseScore = (runtimeScore + memoryScore + efficiencyScore) / 3;
+  const multiplier = languageMultiplier[language as keyof typeof languageMultiplier] || 1.0;
+  return Math.floor(baseScore * multiplier);
 }
 
 function validateCodeByLanguage(code: string, language: string) {
@@ -172,23 +231,4 @@ function generateWrongOutput(expected: any) {
     return JSON.stringify(expected.toLowerCase()) // Wrong case
   }
   return JSON.stringify(null)
-}
-
-function calculateScore(runtime: number, memory: number, codeLength: number, language: string): number {
-  // Language-specific scoring multipliers
-  const languageMultiplier = {
-    javascript: 1.0,
-    python: 0.9,
-    java: 1.1,
-    cpp: 1.2,
-  }
-
-  const runtimeScore = Math.max(0, 100 - runtime / 3)
-  const memoryScore = Math.max(0, 100 - memory * 2)
-  const efficiencyScore = Math.max(0, 100 - codeLength / 15)
-
-  const baseScore = (runtimeScore + memoryScore + efficiencyScore) / 3
-  const multiplier = languageMultiplier[language as keyof typeof languageMultiplier] || 1.0
-
-  return Math.floor(baseScore * multiplier)
 }
