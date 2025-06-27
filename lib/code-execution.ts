@@ -4,15 +4,18 @@
 const fetch: (...args: [string, any?]) => Promise<any> = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 import { v4 as uuidv4 } from 'uuid';
 
-interface ExecutionResult {
-  success: boolean;
-  output: string;
-  runtime: number;
-  memory: number;
-  score?: number;
-}
+// Helper for preparing Judge0 API payloads and language mapping
 
-interface Judge0Submission {
+export const JUDGE0_API_URL = 'https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true';
+
+export const languageMap: Record<string, number> = {
+  javascript: 63, // Node.js
+  python: 71,     // Python 3
+  java: 62,       // Java
+  cpp: 54,        // C++ (GCC 9.2.0)
+};
+
+export interface Judge0Submission {
   stdout?: string;
   time?: string;
   memory?: number;
@@ -21,15 +24,38 @@ interface Judge0Submission {
   message?: string;
 }
 
-const JUDGE0_API_URL = 'https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true';
-const JUDGE0_API_KEY = process.env.JUDGE0_API_KEY || '';
+export interface ExecutionResult {
+  success: boolean;
+  output: string;
+  runtime: number;
+  memory: number;
+  score?: number;
+}
 
-const languageMap: Record<string, number> = {
-  javascript: 63, // Node.js
-  python: 71,     // Python 3
-  java: 62,       // Java
-  cpp: 54,        // C++ (GCC 9.2.0)
-};
+export function prepareJudge0Payload(code: string, language: string, input: any) {
+  const languageId = languageMap[language];
+  if (!languageId) return null;
+  return {
+    source_code: code,
+    language_id: languageId,
+    stdin: typeof input === 'string' ? input : JSON.stringify(input),
+  };
+}
+
+export function calculateScore(runtime: number, memory: number, codeLength: number, language: string): number {
+  const languageMultiplier = {
+    javascript: 1.0,
+    python: 0.9,
+    java: 1.1,
+    cpp: 1.2,
+  };
+  const runtimeScore = Math.max(0, 100 - runtime / 3);
+  const memoryScore = Math.max(0, 100 - memory / 2);
+  const efficiencyScore = Math.max(0, 100 - codeLength / 15);
+  const baseScore = (runtimeScore + memoryScore + efficiencyScore) / 3;
+  const multiplier = languageMultiplier[language as keyof typeof languageMultiplier] || 1.0;
+  return Math.floor(baseScore * multiplier);
+}
 
 export async function executeCode(
   code: string,
@@ -101,7 +127,7 @@ async function submitToJudge0(source_code: string, language_id: number, stdin: s
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-RapidAPI-Key': JUDGE0_API_KEY,
+      'X-RapidAPI-Key': process.env.JUDGE0_API_KEY || '',
       'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
     },
     body: JSON.stringify({
@@ -111,21 +137,6 @@ async function submitToJudge0(source_code: string, language_id: number, stdin: s
     }),
   });
   return await response.json() as Judge0Submission;
-}
-
-function calculateScore(runtime: number, memory: number, codeLength: number, language: string): number {
-  const languageMultiplier = {
-    javascript: 1.0,
-    python: 0.9,
-    java: 1.1,
-    cpp: 1.2,
-  };
-  const runtimeScore = Math.max(0, 100 - runtime / 3);
-  const memoryScore = Math.max(0, 100 - memory / 2);
-  const efficiencyScore = Math.max(0, 100 - codeLength / 15);
-  const baseScore = (runtimeScore + memoryScore + efficiencyScore) / 3;
-  const multiplier = languageMultiplier[language as keyof typeof languageMultiplier] || 1.0;
-  return Math.floor(baseScore * multiplier);
 }
 
 function validateCodeByLanguage(code: string, language: string) {
