@@ -1,9 +1,6 @@
 // This approach uses local Docker execution instead of Cloud Run
 // Better for development and simpler deployment
 
-const fetch: (...args: [string, any?]) => Promise<any> = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-import { v4 as uuidv4 } from 'uuid';
-
 // Helper for preparing Judge0 API payloads and language mapping
 
 export const JUDGE0_API_URL = 'https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=false&wait=true';
@@ -32,16 +29,6 @@ export interface ExecutionResult {
   score?: number;
 }
 
-export function prepareJudge0Payload(code: string, language: string, input: any) {
-  const languageId = languageMap[language];
-  if (!languageId) return null;
-  return {
-    source_code: code,
-    language_id: languageId,
-    stdin: typeof input === 'string' ? input : JSON.stringify(input),
-  };
-}
-
 export function calculateScore(runtime: number, memory: number, codeLength: number, language: string): number {
   const languageMultiplier = {
     javascript: 1.0,
@@ -55,6 +42,16 @@ export function calculateScore(runtime: number, memory: number, codeLength: numb
   const baseScore = (runtimeScore + memoryScore + efficiencyScore) / 3;
   const multiplier = languageMultiplier[language as keyof typeof languageMultiplier] || 1.0;
   return Math.floor(baseScore * multiplier);
+}
+
+export function prepareJudge0Payload(code: string, language: string, input: any) {
+  const languageId = languageMap[language];
+  if (!languageId) return null;
+  return {
+    source_code: code,
+    language_id: languageId,
+    stdin: typeof input === 'string' ? input : JSON.stringify(input),
+  };
 }
 
 export async function executeCode(
