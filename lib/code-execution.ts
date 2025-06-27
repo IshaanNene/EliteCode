@@ -189,7 +189,7 @@ export async function executeCode(
 }
 
 async function submitToJudge0(source_code: string, language_id: number, stdin: string): Promise<Judge0Submission> {
-  const apiKey = process.env.JUDGE0_API_KEY;
+  const apiKey = 'be0771224amsh4fb869f340a0ab7p127939jsn3ec3b7a57a5b';
   if (!apiKey) {
     throw new Error('JUDGE0_API_KEY environment variable is not set');
   }
