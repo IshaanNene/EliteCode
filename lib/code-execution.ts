@@ -101,13 +101,36 @@ export async function executeCode(
     const expectedOutput = typeof testCase.expected === 'string' ? testCase.expected : JSON.stringify(testCase.expected);
 
     try {
-      const submission: Judge0Submission = await submitToJudge0(code, languageId, stdin);
+      // Wrap code for proper execution if needed
+      const executableCode = wrapCodeForExecution(code, language, stdin);
+      
+      const submission: Judge0Submission = await submitToJudge0(executableCode, languageId, stdin);
       
       // Handle compilation or runtime errors
-      if (submission.stderr || submission.compile_output) {
+      if (submission.compile_output && submission.compile_output.trim()) {
         return {
           success: false,
-          output: `❌ Execution Error:\n${submission.stderr || submission.compile_output}`,
+          output: formatErrorMessage(submission.compile_output, language),
+          runtime: 0,
+          memory: 0,
+        };
+      }
+      
+      if (submission.stderr && submission.stderr.trim()) {
+        return {
+          success: false,
+          output: formatErrorMessage(submission.stderr, language),
+          runtime: 0,
+          memory: 0,
+        };
+      }
+      
+      // Handle Judge0 status codes
+      if (submission.status && submission.status.id !== 3) { // 3 = Accepted
+        const statusMessage = getStatusMessage(submission.status.id);
+        return {
+          success: false,
+          output: `❌ Execution Failed: ${statusMessage}\n${submission.message || ''}`,
           runtime: 0,
           memory: 0,
         };
@@ -166,7 +189,7 @@ export async function executeCode(
 }
 
 async function submitToJudge0(source_code: string, language_id: number, stdin: string): Promise<Judge0Submission> {
-  const apiKey = 'be0771224amsh4fb869f340a0ab7p127939jsn3ec3b7a57a5b';
+  const apiKey = process.env.JUDGE0_API_KEY;
   if (!apiKey) {
     throw new Error('JUDGE0_API_KEY environment variable is not set');
   }
@@ -195,44 +218,95 @@ async function submitToJudge0(source_code: string, language_id: number, stdin: s
 function validateCodeByLanguage(code: string, language: string): { valid: boolean; error: string | null } {
   const trimmedCode = code.trim();
 
-  if (trimmedCode.length < 10) {
+  if (trimmedCode.length < 5) {
     return { valid: false, error: "Code is too short. Please implement a solution." };
   }
 
+  // Basic syntax checks without being too restrictive
   switch (language) {
     case "javascript":
-      if (!trimmedCode.includes("function") && !trimmedCode.includes("=>")) {
-        return { valid: false, error: "JavaScript code must contain a function definition." };
+      // Check for basic JavaScript patterns
+      if (!trimmedCode.includes("function") && 
+          !trimmedCode.includes("=>") && 
+          !trimmedCode.includes("const ") && 
+          !trimmedCode.includes("let ") &&
+          !trimmedCode.includes("var ")) {
+        return { valid: false, error: "JavaScript code should contain function definitions or variable declarations." };
       }
-      if (!trimmedCode.includes("return")) {
-        return { valid: false, error: "JavaScript function must return a value." };
+      
+      // Check for obvious syntax errors
+      const openBraces = (trimmedCode.match(/\{/g) || []).length;
+      const closeBraces = (trimmedCode.match(/\}/g) || []).length;
+      if (Math.abs(openBraces - closeBraces) > 2) { // Allow some tolerance
+        return { valid: false, error: "JavaScript code has mismatched braces." };
       }
       break;
 
     case "python":
-      if (!trimmedCode.includes("def ") && !trimmedCode.includes("lambda")) {
-        return { valid: false, error: "Python code must contain a function definition (def)." };
+      // Check for basic Python patterns
+      if (!trimmedCode.includes("def ") && 
+          !trimmedCode.includes("lambda") && 
+          !trimmedCode.includes("class ") &&
+          !trimmedCode.includes("=") &&
+          !trimmedCode.includes("import")) {
+        return { valid: false, error: "Python code should contain function definitions, classes, or statements." };
       }
-      if (!trimmedCode.includes("return")) {
-        return { valid: false, error: "Python function must return a value." };
+      
+      // Check for obvious indentation issues (basic check)
+      const lines = trimmedCode.split('\n');
+      let hasIndentedLines = false;
+      for (const line of lines) {
+        if (line.startsWith('    ') || line.startsWith('\t')) {
+          hasIndentedLines = true;
+          break;
+        }
+      }
+      
+      if (trimmedCode.includes('def ') && !hasIndentedLines && !trimmedCode.includes('lambda')) {
+        return { valid: false, error: "Python function definitions require proper indentation." };
       }
       break;
 
     case "java":
-      if (!trimmedCode.includes("public") || !trimmedCode.includes("class")) {
-        return { valid: false, error: "Java code must contain a public class definition." };
+      // Check for basic Java structure
+      if (!trimmedCode.includes("class") && !trimmedCode.includes("public") && !trimmedCode.includes("static")) {
+        return { valid: false, error: "Java code should contain class definitions or method declarations." };
       }
-      if (!trimmedCode.includes("return")) {
-        return { valid: false, error: "Java method must return a value." };
+      
+      // Check for basic brace matching
+      const javaOpenBraces = (trimmedCode.match(/\{/g) || []).length;
+      const javaCloseBraces = (trimmedCode.match(/\}/g) || []).length;
+      if (Math.abs(javaOpenBraces - javaCloseBraces) > 1) {
+        return { valid: false, error: "Java code has mismatched braces." };
+      }
+      
+      // Check for semicolon in method-like structures
+      if (trimmedCode.includes("return") && !trimmedCode.includes(";")) {
+        return { valid: false, error: "Java statements should end with semicolons." };
       }
       break;
 
     case "cpp":
-      if (!trimmedCode.includes("#include")) {
-        return { valid: false, error: "C++ code must include necessary headers." };
+      // Check for basic C++ patterns
+      if (!trimmedCode.includes("#include") && 
+          !trimmedCode.includes("int ") && 
+          !trimmedCode.includes("void ") &&
+          !trimmedCode.includes("class ") &&
+          !trimmedCode.includes("struct ")) {
+        return { valid: false, error: "C++ code should contain includes, function definitions, or class/struct declarations." };
       }
-      if (!trimmedCode.includes("return")) {
-        return { valid: false, error: "C++ function must return a value." };
+      
+      // Check for basic brace matching
+      const cppOpenBraces = (trimmedCode.match(/\{/g) || []).length;
+      const cppCloseBraces = (trimmedCode.match(/\}/g) || []).length;
+      if (Math.abs(cppOpenBraces - cppCloseBraces) > 1) {
+        return { valid: false, error: "C++ code has mismatched braces." };
+      }
+      
+      // Check for semicolon in statements
+      if ((trimmedCode.includes("return") || trimmedCode.includes("=")) && 
+          !trimmedCode.includes(";")) {
+        return { valid: false, error: "C++ statements should end with semicolons." };
       }
       break;
 
@@ -241,6 +315,186 @@ function validateCodeByLanguage(code: string, language: string): { valid: boolea
   }
 
   return { valid: true, error: null };
+}
+
+function wrapCodeForExecution(code: string, language: string, input: string): string {
+  const trimmedCode = code.trim();
+  
+  switch (language) {
+    case "cpp":
+      // Check if it's already a complete program
+      if (trimmedCode.includes("int main") || trimmedCode.includes("void main")) {
+        // Ensure proper includes are present
+        if (!trimmedCode.includes("#include")) {
+          return `#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <map>
+#include <unordered_map>
+#include <set>
+#include <unordered_set>
+#include <queue>
+#include <stack>
+#include <climits>
+#include <cmath>
+using namespace std;
+
+${code}`;
+        }
+        return code;
+      }
+      
+      // If it's just a function, wrap it in a main function
+      if (trimmedCode.includes("#include")) {
+        // Has includes but no main - add main function
+        return `${code}
+
+int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    // Add your function call here based on the problem requirements
+    return 0;
+}`;
+      } else {
+        // No includes, assume it's a function definition - wrap completely
+        return `#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <map>
+#include <unordered_map>
+#include <set>
+#include <unordered_set>
+#include <queue>
+#include <stack>
+#include <climits>
+#include <cmath>
+using namespace std;
+
+${code}
+
+int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    // Add your function call here based on the problem requirements
+    return 0;
+}`;
+      }
+      
+    case "java":
+      // Check if it's already a complete class with main
+      if (trimmedCode.includes("public static void main")) {
+        // Ensure it uses Main class name and has proper imports
+        let modifiedCode = code.replace(/public class \w+/g, 'class Main');
+        modifiedCode = modifiedCode.replace(/class \w+(?=\s*\{)/g, 'class Main');
+        
+        // Add imports if not present
+        if (!modifiedCode.includes("import")) {
+          modifiedCode = `import java.util.*;
+import java.io.*;
+import java.math.*;
+
+${modifiedCode}`;
+        }
+        return modifiedCode;
+      }
+      
+      // Add common imports that might be needed
+      const commonImports = `import java.util.*;
+import java.io.*;
+import java.math.*;
+
+`;
+      
+      // If it's just a method, wrap it in a class with main
+      if (trimmedCode.includes("class ") || trimmedCode.includes("public class")) {
+        // Remove public from class declaration and rename to Main
+        let modifiedCode = code.replace(/public class \w+/g, 'class Main');
+        modifiedCode = modifiedCode.replace(/class \w+(?=\s*\{)/g, 'class Main');
+        
+        // Add imports at the beginning if not present
+        if (!modifiedCode.includes("import")) {
+          modifiedCode = commonImports + modifiedCode;
+        }
+        
+        // Add main method if not present
+        if (!modifiedCode.includes("public static void main")) {
+          const lines = modifiedCode.split('\n');
+          let lastBraceIndex = -1;
+          for (let i = lines.length - 1; i >= 0; i--) {
+            if (lines[i].trim() === '}') {
+              lastBraceIndex = i;
+              break;
+            }
+          }
+          
+          if (lastBraceIndex !== -1) {
+            lines.splice(lastBraceIndex, 0, '    public static void main(String[] args) {');
+            lines.splice(lastBraceIndex + 1, 0, '        // Add your method call here');
+            lines.splice(lastBraceIndex + 2, 0, '    }');
+          }
+          modifiedCode = lines.join('\n');
+        }
+        
+        return modifiedCode;
+      } else {
+        // Assume it's a method - wrap in complete class
+        return `${commonImports}class Main {
+    ${code}
+    
+    public static void main(String[] args) {
+        // Add your method call here
+    }
+}`;
+      }
+      
+    case "python":
+      // Check if it's a complete program or just functions
+      if (trimmedCode.includes("if __name__ == '__main__'")) {
+        return code;
+      }
+      
+      // If it's just functions, we might need to add execution code
+      // For now, just return as-is since Python can execute function definitions
+      // But add common imports that might be needed
+      const needsImports = !trimmedCode.includes("import") && 
+                          (trimmedCode.includes("List") || 
+                           trimmedCode.includes("Dict") || 
+                           trimmedCode.includes("collections") ||
+                           trimmedCode.includes("math") ||
+                           trimmedCode.includes("sys"));
+      
+      if (needsImports) {
+        return `import sys
+import math
+import collections
+from typing import List, Dict, Set, Tuple, Optional
+
+${code}`;
+      }
+      
+      return code;
+      
+    case "javascript":
+      // Node.js - check if it needs any common requires/imports
+      const needsRequires = !trimmedCode.includes("require") && !trimmedCode.includes("import") &&
+                           (trimmedCode.includes("readline") || 
+                            trimmedCode.includes("fs") ||
+                            trimmedCode.includes("process.stdin"));
+      
+      if (needsRequires) {
+        return `const readline = require('readline');
+const fs = require('fs');
+
+${code}`;
+      }
+      
+      return code;
+      
+    default:
+      return code;
+  }
 }
 
 function generateSuccessOutput(results: any[], runtime: number, memory: number, language: string): string {
@@ -299,4 +553,68 @@ function generateWrongOutput(expected: any): string {
     return JSON.stringify(expected.toLowerCase()); // Wrong case
   }
   return JSON.stringify(null);
+}
+
+// Helper function to interpret Judge0 status codes
+function getStatusMessage(statusId: number): string {
+  const statusMap: Record<number, string> = {
+    1: "Queue - Your submission is in queue",
+    2: "Processing - Your submission is being processed", 
+    3: "Accepted - Execution successful",
+    4: "Wrong Answer - Output doesn't match expected",
+    5: "Time Limit Exceeded - Code took too long to execute",
+    6: "Compilation Error - Code failed to compile",
+    7: "Runtime Error (SIGSEGV) - Segmentation fault",
+    8: "Runtime Error (SIGXFSZ) - File size limit exceeded", 
+    9: "Runtime Error (SIGFPE) - Floating point exception",
+    10: "Runtime Error (SIGABRT) - Process aborted",
+    11: "Runtime Error (NZEC) - Non-zero exit code",
+    12: "Runtime Error (Other) - Other runtime error",
+    13: "Internal Error - Judge0 internal error",
+    14: "Exec Format Error - Executable format error"
+  };
+  
+  return statusMap[statusId] || `Unknown status (${statusId})`;
+}
+
+// Helper to format error messages nicely
+function formatErrorMessage(error: string, language: string): string {
+  const languageHints: Record<string, string[]> = {
+    java: [
+      "Make sure class name matches the filename",
+      "Check that all imports are included",
+      "Verify semicolons at end of statements",
+      "Ensure proper brace matching"
+    ],
+    cpp: [
+      "Include necessary headers (#include <iostream>, etc.)",
+      "Add 'using namespace std;' if needed", 
+      "Check for missing semicolons",
+      "Verify main() function signature"
+    ],
+    python: [
+      "Check indentation (use 4 spaces)",
+      "Verify function definitions use 'def'",
+      "Check for missing colons after function/class definitions",
+      "Ensure proper variable naming"
+    ],
+    javascript: [
+      "Check function syntax",
+      "Verify proper brace matching",
+      "Check for missing semicolons",
+      "Ensure variable declarations use const/let/var"
+    ]
+  };
+  
+  let formattedError = `❌ ${language.toUpperCase()} ERROR:\n${error}\n`;
+  
+  const hints = languageHints[language];
+  if (hints) {
+    formattedError += "\n💡 Common fixes:\n";
+    hints.forEach(hint => {
+      formattedError += `   • ${hint}\n`;
+    });
+  }
+  
+  return formattedError;
 }
