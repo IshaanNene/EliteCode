@@ -25,7 +25,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Global Background */
+/* Simplified Background - Much Less Expensive */
 .holi-background {
   position: fixed;
   top: 0;
@@ -33,12 +33,11 @@ body {
   width: 100vw;
   height: 100vh;
   z-index: -2;
-  background: radial-gradient(circle at 20% 20%, var(--holi-pink) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, var(--holi-aqua) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, var(--holi-yellow) 0%, transparent 50%),
-    radial-gradient(circle at 10% 80%, var(--holi-green) 0%, transparent 50%),
-    radial-gradient(circle at 90% 20%, var(--holi-orange) 0%, transparent 50%);
-  filter: blur(80px);
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(255, 0, 127, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(0, 229, 255, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(255, 230, 0, 0.15) 0%, transparent 40%);
+  /* Removed expensive blur filter */
 }
 
 .glass-overlay {
@@ -48,107 +47,86 @@ body {
   width: 100vw;
   height: 100vh;
   z-index: -1;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(30px);
+  background: rgba(255, 255, 255, 0.05);
+  /* Reduced backdrop-filter blur from 30px to 10px */
+  backdrop-filter: blur(10px);
 }
 
-/* Static Animations */
+/* Optimized Animations - Reduced frequency and complexity */
 @keyframes glow {
-  0%,
-  100% {
-    text-shadow: 0 0 8px rgba(255, 215, 0, 0.6), 0 0 16px rgba(255, 215, 0, 0.4), 0 0 24px rgba(255, 215, 0, 0.2);
+  0%, 100% {
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
   }
   50% {
-    text-shadow: 0 0 16px rgba(255, 215, 0, 0.8), 0 0 32px rgba(255, 215, 0, 0.6), 0 0 48px rgba(255, 215, 0, 0.4);
+    text-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
   }
 }
 
 @keyframes silverGlow {
-  0%,
-  100% {
-    text-shadow: 0 0 6px rgba(192, 192, 192, 0.4), 0 0 12px rgba(192, 192, 192, 0.3), 0 0 18px rgba(192, 192, 192, 0.2);
+  0%, 100% {
+    text-shadow: 0 0 6px rgba(192, 192, 192, 0.3);
   }
   50% {
-    text-shadow: 0 0 12px rgba(192, 192, 192, 0.6), 0 0 24px rgba(192, 192, 192, 0.4), 0 0 36px rgba(192, 192, 192, 0.3);
+    text-shadow: 0 0 12px rgba(192, 192, 192, 0.5);
   }
 }
 
 @keyframes sparkle {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 0;
-    transform: scale(0) rotate(0deg);
+    transform: scale(0.8);
   }
   50% {
     opacity: 1;
-    transform: scale(1) rotate(180deg);
+    transform: scale(1);
   }
 }
 
 @keyframes fadeInBlur {
   0% {
     opacity: 0;
-    filter: blur(10px);
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   100% {
     opacity: 1;
-    filter: blur(0px);
     transform: translateY(0);
   }
 }
 
-/* Enhanced Typography with Static Glitter */
+/* Simplified Typography - Less GPU-intensive */
 .gold-text {
-  background: linear-gradient(45deg, var(--gold) 0%, #fff700 25%, var(--gold-dark) 50%, #fff700 75%, var(--gold) 100%);
+  background: linear-gradient(45deg, var(--gold) 0%, #fff700 50%, var(--gold-dark) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: glow 2s ease-in-out infinite;
+  /* Reduced animation frequency from 2s to 4s */
+  animation: glow 4s ease-in-out infinite;
   position: relative;
   font-weight: 700;
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
 }
 
 .silver-text {
-  background: linear-gradient(
-    45deg,
-    var(--silver) 0%,
-    #ffffff 25%,
-    var(--silver-light) 50%,
-    #ffffff 75%,
-    var(--silver) 100%
-  );
+  background: linear-gradient(45deg, var(--silver) 0%, #ffffff 50%, var(--silver-light) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: silverGlow 2s ease-in-out infinite;
+  animation: silverGlow 4s ease-in-out infinite;
   position: relative;
   font-weight: 600;
-  text-shadow: 0 0 15px rgba(192, 192, 192, 0.3);
 }
 
-/* Super Glittery Text for Headers */
+/* Simplified Super Gold Text */
 .super-gold-text {
-  background: linear-gradient(
-    45deg,
-    var(--gold) 0%,
-    #fff700 20%,
-    #ffffff 40%,
-    var(--gold-dark) 60%,
-    #fff700 80%,
-    var(--gold) 100%
-  );
+  background: linear-gradient(45deg, var(--gold) 0%, #fff700 50%, var(--gold-dark) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: glow 1.5s ease-in-out infinite;
+  animation: glow 3s ease-in-out infinite;
   position: relative;
   font-weight: 800;
-  text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
 }
 
-/* Sparkle Effects */
+/* Simplified Sparkle Effects */
 .sparkle-container {
   position: relative;
   display: inline-block;
@@ -157,24 +135,24 @@ body {
 .sparkle-container::after {
   content: "✨";
   position: absolute;
-  top: -10px;
-  right: -10px;
-  font-size: 0.8em;
-  animation: sparkle 2s infinite;
+  top: -8px;
+  right: -8px;
+  font-size: 0.7em;
+  animation: sparkle 3s infinite;
   animation-delay: 0.5s;
 }
 
 .sparkle-container::before {
   content: "⭐";
   position: absolute;
-  bottom: -10px;
-  left: -10px;
-  font-size: 0.6em;
-  animation: sparkle 2s infinite;
-  animation-delay: 1s;
+  bottom: -8px;
+  left: -8px;
+  font-size: 0.5em;
+  animation: sparkle 3s infinite;
+  animation-delay: 1.5s;
 }
 
-/* Leaderboard Styles */
+/* Leaderboard Styles - Reduced blur effects */
 .podium {
   display: flex;
   align-items: end;
@@ -191,8 +169,9 @@ body {
 }
 
 .podium-step {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-  backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.1);
+  /* Reduced backdrop-filter blur */
+  backdrop-filter: blur(5px);
   border: 2px solid;
   border-radius: 12px 12px 0 0;
   display: flex;
@@ -207,49 +186,49 @@ body {
 .podium-first {
   height: 200px;
   border-color: var(--gold);
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
 }
 
 .podium-second {
   height: 160px;
   border-color: var(--silver);
-  box-shadow: 0 0 20px rgba(192, 192, 192, 0.3);
+  box-shadow: 0 0 15px rgba(192, 192, 192, 0.2);
 }
 
 .podium-third {
   height: 120px;
   border-color: #cd7f32;
-  box-shadow: 0 0 15px rgba(205, 127, 50, 0.3);
+  box-shadow: 0 0 10px rgba(205, 127, 50, 0.2);
 }
 
 .trophy {
   font-size: 3rem;
   margin-bottom: 10px;
-  animation: float 3s ease-in-out infinite;
+  /* Slower, less frequent animation */
+  animation: float 6s ease-in-out infinite;
 }
 
 .trophy-gold {
   color: var(--gold);
-  text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  text-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
 }
 
 .trophy-silver {
   color: var(--silver);
-  text-shadow: 0 0 15px rgba(192, 192, 192, 0.6);
+  text-shadow: 0 0 10px rgba(192, 192, 192, 0.4);
 }
 
 .trophy-bronze {
   color: #cd7f32;
-  text-shadow: 0 0 10px rgba(205, 127, 50, 0.6);
+  text-shadow: 0 0 8px rgba(205, 127, 50, 0.4);
 }
 
 @keyframes float {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
 }
 
@@ -262,12 +241,12 @@ body {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 10px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .leaderboard-rank:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(5px);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateX(3px);
 }
 
 .rank-number {
@@ -287,10 +266,10 @@ body {
   justify-content: center;
   font-weight: bold;
   color: black;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
 }
 
-/* Profile specific styles */
+/* Profile specific styles - Reduced glow effects */
 .profile-avatar {
   width: 120px;
   height: 120px;
@@ -302,25 +281,25 @@ body {
   font-weight: bold;
   color: black;
   font-size: 3rem;
-  box-shadow: 0 0 40px rgba(255, 215, 0, 0.6), 0 0 80px rgba(255, 215, 0, 0.3);
-  animation: glow 2s ease-in-out infinite;
-  border: 4px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+  animation: glow 4s ease-in-out infinite;
+  border: 3px solid rgba(255, 255, 255, 0.2);
 }
 
 .profile-stat-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border: 2px solid rgba(255, 215, 0, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(5px);
+  border: 2px solid rgba(255, 215, 0, 0.2);
   border-radius: 16px;
   padding: 20px;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .profile-stat-card:hover {
-  border-color: rgba(255, 215, 0, 0.6);
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-  transform: translateY(-5px);
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+  transform: translateY(-3px);
 }
 
 .profile-stat-number {
@@ -334,26 +313,26 @@ body {
   opacity: 0.8;
 }
 
-/* Glass Components */
+/* Glass Components - Reduced blur */
 .glass-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .glass-input {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.7);
   border: 2px solid var(--silver);
   border-radius: 8px;
   color: white;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .glass-input:focus {
   border-color: var(--gold);
-  box-shadow: 0 0 16px rgba(255, 215, 0, 0.3);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.3);
   outline: none;
 }
 
@@ -362,7 +341,7 @@ body {
   opacity: 0.7;
 }
 
-/* Enhanced Buttons */
+/* Enhanced Buttons - Reduced effects */
 .btn-gold {
   background: transparent;
   border: 2px solid var(--gold);
@@ -373,12 +352,12 @@ body {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-gold:hover {
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+  transform: translateY(-1px);
 }
 
 .btn-silver {
@@ -391,12 +370,12 @@ body {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-silver:hover {
-  box-shadow: 0 0 20px rgba(192, 192, 192, 0.5);
-  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(192, 192, 192, 0.4);
+  transform: translateY(-1px);
 }
 
 /* Difficulty Tags */
@@ -425,12 +404,12 @@ body {
   border-radius: 16px;
   font-size: 12px;
   font-weight: 600;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
 }
 
 /* Page Transitions */
 .page-enter {
-  animation: fadeInBlur 0.6s ease-out;
+  animation: fadeInBlur 0.4s ease-out;
 }
 
 /* Monaco Editor Customization */
@@ -440,7 +419,6 @@ body {
 
 .monaco-editor .cursor {
   background: var(--gold) !important;
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.8) !important;
 }
 
 /* Monaco Editor Container */
@@ -448,7 +426,7 @@ body {
   height: 100%;
   border-radius: 8px;
   overflow: hidden;
-  border: 2px solid rgba(255, 215, 0, 0.3);
+  border: 2px solid rgba(255, 215, 0, 0.2);
 }
 
 /* Auth Form Enhancements */
