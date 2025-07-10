@@ -18,13 +18,13 @@ export default function OutputPanel({ output, isRunning }: OutputPanelProps) {
   const getHeaderIcon = () => {
     switch (outputType) {
       case "success":
-        return "✅"
+        return "✓"
       case "error":
-        return "❌"
+        return "✗"
       case "running":
-        return "⏳"
+        return "..."
       default:
-        return "📋"
+        return ">"
     }
   }
 
@@ -79,7 +79,6 @@ export default function OutputPanel({ output, isRunning }: OutputPanelProps) {
             <pre className={`text-sm font-mono whitespace-pre-wrap ${getTextColor()}`}>{output}</pre>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <div className="text-4xl mb-4">🚀</div>
               <div className="text-lg font-semibold mb-2">Ready to Execute</div>
               <div className="text-sm text-center">
                 Click "Run" to test your code or "Submit" to submit your solution

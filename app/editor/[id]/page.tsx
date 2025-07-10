@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { supabase } from "@/lib/supabase"
-import { executeCode } from "@/lib/code-execution"
+import { executeCodeWithJudge0 } from "@/lib/judge0-executor"
 import CodeEditor from "@/components/CodeEditor"
 import OutputPanel from "@/components/OutputPanel"
 
@@ -82,34 +82,45 @@ export default function EditorPage() {
   }
 
   const handleRun = async () => {
-    if (!problem) return
+    if (!problem || !problem.test_cases) {
+      setOutput("ERROR: Problem test cases not loaded")
+      return
+    }
 
     setIsRunning(true)
-    setOutput("🔄 Initializing EliteCode execution environment...\n⚡ Compiling code...\n🧪 Running test cases...")
+    setOutput("Connecting to Judge0 servers...\nCompiling and executing code...\nRunning test cases...")
 
     try {
-      const result = await executeCode(code, language, problem.test_cases)
+      // Use first 3 test cases for run
+      const result = await executeCodeWithJudge0(code, language, problem.test_cases.slice(0, 3), false)
       setOutput(result.output)
     } catch (error) {
-      setOutput(`❌ EXECUTION ERROR\n\n${(error as Error).message}`)
+      console.error("Run error:", error)
+      setOutput(`EXECUTION ERROR\n\n${(error as Error).message}`)
     }
 
     setIsRunning(false)
   }
 
   const handleSubmit = async () => {
-    if (!problem || !user) {
-      setOutput("❌ AUTHENTICATION ERROR\n\nPlease log in to submit your solution to EliteCode.")
+    if (!problem || !problem.test_cases) {
+      setOutput("ERROR: Problem test cases not loaded")
+      return
+    }
+
+    if (!user) {
+      setOutput("AUTHENTICATION ERROR\n\nPlease log in to submit your solution to EliteCode.")
       return
     }
 
     setIsRunning(true)
-    setOutput("🚀 Submitting solution to EliteCode servers...\n⚡ Running comprehensive test suite...")
+    setOutput(
+      "Submitting solution to EliteCode...\nConnecting to Judge0 servers...\nRunning comprehensive test suite...",
+    )
 
     try {
-      const result = await executeCode(code, language, problem.test_cases)
+      const result = await executeCodeWithJudge0(code, language, problem.test_cases, true)
 
-      // Save submission to database
       const submission = {
         user_id: user.id,
         problem_id: Number.parseInt(problemId),
@@ -125,12 +136,13 @@ export default function EditorPage() {
 
       if (submissionError) {
         console.error("Error saving submission:", submissionError)
-        setOutput(result.output + "\n\n⚠️ Note: Submission saved locally but may not have synced to leaderboard.")
+        setOutput(result.output + "\n\nNote: Execution completed but submission may not have been saved to database.")
       } else {
-        setOutput(result.output + "\n\n✅ Submission successfully saved to EliteCode!")
+        setOutput(result.output)
       }
     } catch (error) {
-      setOutput(`❌ SUBMISSION ERROR\n\n${(error as Error).message}`)
+      console.error("Submit error:", error)
+      setOutput(`SUBMISSION ERROR\n\n${(error as Error).message}`)
     }
 
     setIsRunning(false)
@@ -224,6 +236,14 @@ export default function EditorPage() {
             <div className="flex justify-between text-sm">
               <span className="silver-text">Acceptance Rate:</span>
               <span className="gold-text font-semibold">{problem.acceptance_rate}%</span>
+            </div>
+            <div className="flex justify-between text-sm mt-2">
+              <span className="silver-text">Test Cases:</span>
+              <span className="gold-text font-semibold">{problem.test_cases?.length || 0} total</span>
+            </div>
+            <div className="flex justify-between text-sm mt-2">
+              <span className="silver-text">Execution:</span>
+              <span className="gold-text font-semibold">Judge0 Powered</span>
             </div>
           </div>
         </div>

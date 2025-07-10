@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 
 interface CodeEditorProps {
@@ -17,7 +16,6 @@ interface CodeEditorProps {
 const LANGUAGE_CONFIGS = {
   javascript: {
     name: "JavaScript",
-    icon: "🟨",
     extension: ".js",
     template: `function solution(/* parameters */) {
     // Your code here
@@ -27,7 +25,6 @@ const LANGUAGE_CONFIGS = {
   },
   python: {
     name: "Python",
-    icon: "🐍",
     extension: ".py",
     template: `def solution(/* parameters */):
     # Your code here
@@ -36,7 +33,6 @@ const LANGUAGE_CONFIGS = {
   },
   java: {
     name: "Java",
-    icon: "☕",
     extension: ".java",
     template: `public class Solution {
     public /* return_type */ solution(/* parameters */) {
@@ -48,7 +44,6 @@ const LANGUAGE_CONFIGS = {
   },
   cpp: {
     name: "C++",
-    icon: "⚡",
     extension: ".cpp",
     template: `#include <iostream>
 #include <vector>
@@ -127,12 +122,8 @@ export default function CodeEditor({
       {/* Editor Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/20">
         <div className="flex items-center gap-4">
-          <h3 className="super-gold-text font-semibold flex items-center gap-2">
-            <span className="text-2xl">💻</span>
-            Code Editor
-          </h3>
+          <h3 className="super-gold-text font-semibold flex items-center gap-2">Judge0 Code Editor</h3>
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{currentConfig.icon}</span>
             <select
               value={language}
               onChange={(e) => onLanguageChange(e.target.value)}
@@ -152,16 +143,14 @@ export default function CodeEditor({
             Lines: {lineNumbers.length} | Chars: {value.length}
           </div>
           <button onClick={onRun} disabled={isRunning} className="btn-silver text-sm px-4 py-2 flex items-center gap-2">
-            <span>▶️</span>
-            {isRunning ? "Running..." : "Run"}
+            <span>Run</span>
           </button>
           <button
             onClick={onSubmit}
             disabled={isRunning}
             className="btn-gold text-sm px-4 py-2 flex items-center gap-2"
           >
-            <span>🚀</span>
-            {isRunning ? "Submitting..." : "Submit"}
+            <span>{isRunning ? "Submitting..." : "Submit"}</span>
           </button>
         </div>
       </div>
@@ -192,26 +181,20 @@ export default function CodeEditor({
             spellCheck={false}
             placeholder={`Start coding in ${currentConfig.name}...`}
           />
-
-          {/* Syntax highlighting overlay (simplified) */}
-          <div className="absolute inset-0 pointer-events-none p-4 font-mono text-sm leading-6 opacity-0">
-            {/* This would contain syntax highlighted version in a real implementation */}
-          </div>
         </div>
       </div>
 
       {/* Editor Footer */}
       <div className="flex items-center justify-between p-3 border-t border-white/20 bg-black/20">
         <div className="flex items-center gap-4 text-sm silver-text">
-          <span>Language: {currentConfig.name}</span>
+          <span>Judge0: {currentConfig.name}</span>
           <span>•</span>
-          <span>Tab Size: 4</span>
+          <span>Real Compilation</span>
           <span>•</span>
-          <span>Encoding: UTF-8</span>
+          <span>Secure Execution</span>
         </div>
         <div className="flex items-center gap-2 text-sm silver-text">
-          <span>💡</span>
-          <span>Press Tab for indentation, Ctrl+/ for comments</span>
+          <span>Powered by Judge0 API</span>
         </div>
       </div>
     </div>
