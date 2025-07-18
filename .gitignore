@@ -17,6 +17,7 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files
+process.env
 .env*
 
 # vercel
@@ -25,5 +26,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-process.envprocess.env

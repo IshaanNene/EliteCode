@@ -43,13 +43,14 @@ export async function executeCodeWithJudge0(
     const casesToRun = isSubmission ? testCases : testCases.slice(0, 3)
     const testResults: TestResult[] = []
     let totalRuntime = 0
+    const totalMemory = 0
 
     // Validate code first
     const validation = validateCode(code, language)
     if (!validation.valid) {
       return {
         success: false,
-        output: `CODE VALIDATION FAILED\n\n${validation.error}`,
+        output: `❌ CODE VALIDATION FAILED\n\n${validation.error}`,
         runtime: 0,
         memory: 0,
       }
@@ -72,7 +73,7 @@ export async function executeCodeWithJudge0(
     const passedTests = testResults.filter((r) => r.status === "passed").length
     const allPassed = passedTests === casesToRun.length
     const avgRuntime = Math.round(totalRuntime / testResults.length)
-    const avgMemory = 0 // Judge0 doesn't always provide memory info
+    const avgMemory = Math.round(totalMemory / testResults.length) || 0
 
     // Calculate score for successful submissions
     let score = 0
@@ -92,7 +93,7 @@ export async function executeCodeWithJudge0(
     console.error("Judge0 execution error:", error)
     return {
       success: false,
-      output: `EXECUTION ERROR\n\n${(error as Error).message}`,
+      output: `❌ EXECUTION ERROR\n\n${(error as Error).message}`,
       runtime: 0,
       memory: 0,
     }
@@ -117,7 +118,7 @@ async function executeTestCaseWithJudge0(
     }
 
     // Submit to Judge0
-    const submissionToken = await submitToJudge0(executableCode, languageId)
+    const submissionToken = await submitToJudge0(executableCode, languageId, testCase.input)
 
     // Get result
     const result = await getJudge0Result(submissionToken)
@@ -150,11 +151,12 @@ async function executeTestCaseWithJudge0(
   }
 }
 
-async function submitToJudge0(code: string, languageId: number): Promise<string> {
+async function submitToJudge0(code: string, languageId: number, input: any): Promise<string> {
   const payload = {
     language_id: languageId,
     source_code: btoa(code), // Base64 encode
-    stdin: "",
+    stdin: btoa(JSON.stringify(input)), // Base64 encode input
+    expected_output: null,
   }
 
   const response = await fetch(`${JUDGE0_API_URL}/submissions?base64_encoded=true&wait=false`, {
@@ -175,7 +177,7 @@ async function submitToJudge0(code: string, languageId: number): Promise<string>
   return result.token
 }
 
-async function getJudge0Result(token: string, maxAttempts = 15): Promise<any> {
+async function getJudge0Result(token: string, maxAttempts = 10): Promise<any> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const response = await fetch(`${JUDGE0_API_URL}/submissions/${token}?base64_encoded=true&fields=*`, {
       headers: {
@@ -202,94 +204,46 @@ async function getJudge0Result(token: string, maxAttempts = 15): Promise<any> {
     }
 
     // Wait before next attempt
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
   throw new Error("Judge0 execution timeout")
 }
 
-function extractFunctionName(code: string, language: string): string {
-  switch (language) {
-    case "javascript":
-      // Look for function name in various formats
-      const jsMatch =
-        code.match(/function\s+(\w+)\s*\(/) ||
-        code.match(/const\s+(\w+)\s*=/) ||
-        code.match(/let\s+(\w+)\s*=/) ||
-        code.match(/var\s+(\w+)\s*=/)
-      return jsMatch ? jsMatch[1] : "solution"
-
-    case "python":
-      // Look for def function_name - get the actual function name from code
-      const pyMatch = code.match(/def\s+(\w+)\s*\(/)
-      return pyMatch ? pyMatch[1] : "solution"
-
-    case "java":
-      // Look for public method name
-      const javaMatch = code.match(/public\s+\w+(?:\[\])?\s+(\w+)\s*\(/)
-      return javaMatch ? javaMatch[1] : "solution"
-
-    case "cpp":
-      // Look for public method name in class
-      const cppMatch =
-        code.match(/public:\s*\w+(?:<[^>]*>)?\s+(\w+)\s*\(/) || code.match(/\w+(?:<[^>]*>)?\s+(\w+)\s*$$[^)]*$$\s*{/)
-      return cppMatch ? cppMatch[1] : "solution"
-
-    default:
-      return "solution"
-  }
-}
-
 function prepareCodeForJudge0(code: string, language: string, input: any): string {
-  const functionName = extractFunctionName(code, language)
-
   switch (language) {
     case "javascript":
       return `
 ${code}
 
-// Execute the function with test input
-const testInput = ${JSON.stringify(input)};
+// Read input and execute
+const input = ${JSON.stringify(input)};
 let result;
-
-try {
-  if (Array.isArray(testInput) && testInput.length > 1) {
-    result = ${functionName}(testInput[0], testInput[1]);
-  } else if (Array.isArray(testInput) && testInput.length === 1) {
-    result = ${functionName}(testInput[0]);
-  } else {
-    result = ${functionName}(testInput);
-  }
-  console.log(JSON.stringify(result));
-} catch (error) {
-  console.error("Error:", error.message);
+if (Array.isArray(input)) {
+  result = solution(...input);
+} else {
+  result = solution(input);
 }
+console.log(JSON.stringify(result));
 `
 
     case "python":
       return `
-import json
-
 ${code}
 
-# Execute the function with test input
-test_input = ${JSON.stringify(input)}
+# Read input and execute
+import json
+import sys
 
-try:
-    if isinstance(test_input, list) and len(test_input) > 1:
-        result = ${functionName}(test_input[0], test_input[1])
-    elif isinstance(test_input, list) and len(test_input) == 1:
-        result = ${functionName}(test_input[0])
-    else:
-        result = ${functionName}(test_input)
-    
-    print(json.dumps(result))
-except Exception as e:
-    print(f"Error: {str(e)}")
+input_data = ${JSON.stringify(input)}
+if isinstance(input_data, list):
+    result = solution(*input_data)
+else:
+    result = solution(input_data)
+print(json.dumps(result))
 `
 
     case "java":
-      // For Java, we need to handle the specific problem structure
       return `
 import java.util.*;
 
@@ -297,15 +251,19 @@ ${code}
 
 public class Main {
     public static void main(String[] args) {
-        try {
-            Solution sol = new Solution();
-            
-            // Parse test input: ${JSON.stringify(input)}
-            ${generateJavaInputParsing(input, functionName)}
-            
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+        Solution sol = new Solution();
+        
+        // Parse input for Two Sum problem
+        int[] nums = {${input[0].join(",")}};
+        int target = ${input[1]};
+        
+        int[] result = sol.twoSum(nums, target);
+        System.out.print("[");
+        for (int i = 0; i < result.length; i++) {
+            System.out.print(result[i]);
+            if (i < result.length - 1) System.out.print(",");
         }
+        System.out.println("]");
     }
 }
 `
@@ -320,15 +278,19 @@ using namespace std;
 ${code}
 
 int main() {
-    try {
-        Solution sol;
-        
-        // Parse test input: ${JSON.stringify(input)}
-        ${generateCppInputParsing(input, functionName)}
-        
-    } catch (const exception& e) {
-        cout << "Error: " << e.what() << endl;
+    Solution sol;
+    
+    // Parse input for Two Sum problem
+    vector<int> nums = {${input[0].join(",")}};
+    int target = ${input[1]};
+    
+    vector<int> result = sol.twoSum(nums, target);
+    cout << "[";
+    for (int i = 0; i < result.size(); i++) {
+        cout << result[i];
+        if (i < result.size() - 1) cout << ",";
     }
+    cout << "]" << endl;
     
     return 0;
 }
@@ -337,76 +299,6 @@ int main() {
     default:
       throw new Error(`Unsupported language: ${language}`)
   }
-}
-
-function generateJavaInputParsing(input: any, functionName: string): string {
-  if (Array.isArray(input) && input.length === 2 && Array.isArray(input[0])) {
-    // Two Sum pattern: [[array], target]
-    return `
-            int[] nums = {${input[0].join(",")}};
-            int target = ${input[1]};
-            
-            int[] result = sol.${functionName}(nums, target);
-            
-            System.out.print("[");
-            for (int i = 0; i < result.length; i++) {
-                System.out.print(result[i]);
-                if (i < result.length - 1) System.out.print(",");
-            }
-            System.out.println("]");`
-  } else if (Array.isArray(input) && input.length === 1) {
-    // Single parameter
-    if (typeof input[0] === "string") {
-      return `
-            String param = "${input[0]}";
-            boolean result = sol.${functionName}(param);
-            System.out.println(result);`
-    } else if (Array.isArray(input[0])) {
-      return `
-            int[] nums = {${input[0].join(",")}};
-            int result = sol.${functionName}(nums);
-            System.out.println(result);`
-    }
-  }
-
-  return `
-            // Generic input handling
-            System.out.println("Input format not supported");`
-}
-
-function generateCppInputParsing(input: any, functionName: string): string {
-  if (Array.isArray(input) && input.length === 2 && Array.isArray(input[0])) {
-    // Two Sum pattern: [[array], target]
-    return `
-        vector<int> nums = {${input[0].join(",")}};
-        int target = ${input[1]};
-        
-        vector<int> result = sol.${functionName}(nums, target);
-        
-        cout << "[";
-        for (int i = 0; i < result.size(); i++) {
-            cout << result[i];
-            if (i < result.size() - 1) cout << ",";
-        }
-        cout << "]" << endl;`
-  } else if (Array.isArray(input) && input.length === 1) {
-    // Single parameter
-    if (typeof input[0] === "string") {
-      return `
-        string param = "${input[0]}";
-        bool result = sol.${functionName}(param);
-        cout << (result ? "true" : "false") << endl;`
-    } else if (Array.isArray(input[0])) {
-      return `
-        vector<int> nums = {${input[0].join(",")}};
-        int result = sol.${functionName}(nums);
-        cout << result << endl;`
-    }
-  }
-
-  return `
-        // Generic input handling
-        cout << "Input format not supported" << endl;`
 }
 
 function parseJudge0Output(stdout: string, stderr: string): string {
@@ -422,18 +314,14 @@ function parseJudge0Output(stdout: string, stderr: string): string {
 }
 
 function compareOutputs(actual: string, expected: string): boolean {
-  // Remove any whitespace and compare
-  const cleanActual = actual.trim()
-  const cleanExpected = expected.trim()
-
   try {
     // Try to parse both as JSON for comparison
-    const actualParsed = JSON.parse(cleanActual)
-    const expectedParsed = JSON.parse(cleanExpected)
+    const actualParsed = JSON.parse(actual)
+    const expectedParsed = JSON.parse(expected)
     return JSON.stringify(actualParsed) === JSON.stringify(expectedParsed)
   } catch {
     // Fallback to string comparison
-    return cleanActual === cleanExpected
+    return actual.trim() === expected.trim()
   }
 }
 
@@ -446,18 +334,13 @@ function validateCode(code: string, language: string): { valid: boolean; error?:
 
   switch (language) {
     case "javascript":
-      if (
-        !trimmedCode.includes("function") &&
-        !trimmedCode.includes("=>") &&
-        !trimmedCode.includes("const") &&
-        !trimmedCode.includes("let")
-      ) {
+      if (!trimmedCode.includes("function") && !trimmedCode.includes("=>")) {
         return { valid: false, error: "JavaScript code must contain a function definition." }
       }
       break
 
     case "python":
-      if (!trimmedCode.includes("def ")) {
+      if (!trimmedCode.includes("def ") && !trimmedCode.includes("lambda")) {
         return { valid: false, error: "Python code must contain a function definition (def)." }
       }
       break
@@ -469,8 +352,8 @@ function validateCode(code: string, language: string): { valid: boolean; error?:
       break
 
     case "cpp":
-      if (!trimmedCode.includes("class") && !trimmedCode.includes("struct")) {
-        return { valid: false, error: "C++ code must contain a class or struct definition." }
+      if (!trimmedCode.includes("#include")) {
+        return { valid: false, error: "C++ code must include necessary headers." }
       }
       break
   }
@@ -533,6 +416,7 @@ function generateExecutionOutput(
     output += `All test cases passed!\n\n`
     output += `PERFORMANCE METRICS:\n`
     output += `Average Runtime: ${avgRuntime}ms\n`
+    output += `Memory Usage: ${avgMemory}KB\n`
     output += `Language: ${language.charAt(0).toUpperCase() + language.slice(1)}\n`
     output += `Executed on Judge0 servers\n`
 
