@@ -21,14 +21,17 @@ const DEFAULT_TEMPLATES = {
         
     }
 }`,
-  cpp: `#include <iostream>
+  cpp: `#include <vector>
+#include <unordered_map>
 using namespace std;
 
 class Solution {
 public:
-    void solution() {
+    // Example for Two Sum problem
+    vector<int> solution(vector<int>& nums, int target) {
         // Your code here
         
+        return {};
     }
 };`,
 }
@@ -119,7 +122,19 @@ export default function EditorPage() {
     )
 
     try {
-      const result = await executeCodeWithJudge0(code, language, problem.test_cases, true)
+      // Use the same method as run, just with all test cases
+      // Add a timeout for Judge0 execution (e.g. 30 seconds for all test cases)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Judge0 execution timeout (too many test cases or slow server)")), 30000)
+      )
+      const execPromise = executeCodeWithJudge0(code, language, problem.test_cases, true)
+      const result = await Promise.race([execPromise, timeoutPromise]) as {
+        success: boolean
+        output: string
+        runtime?: number
+        memory?: number
+        score?: number
+      }
 
       const submission = {
         user_id: user.id,

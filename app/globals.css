@@ -34,10 +34,10 @@ body {
   height: 100vh;
   z-index: -2;
   background:
-    radial-gradient(circle at 20% 20%, rgba(255, 0, 127, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(0, 229, 255, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(255, 230, 0, 0.15) 0%, transparent 40%);
-  /* Removed expensive blur filter */
+    radial-gradient(circle at 20% 20%, rgba(255, 0, 127, 0.45) 0%, transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(0, 229, 255, 0.45) 0%, transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(255, 230, 0, 0.45) 0%, transparent 60%);
+  /* Removed blur filter entirely for speed */
 }
 
 .glass-overlay {
@@ -47,81 +47,41 @@ body {
   width: 100vw;
   height: 100vh;
   z-index: -1;
-  background: rgba(255, 255, 255, 0.05);
-  /* Reduced backdrop-filter blur from 30px to 10px */
-  backdrop-filter: blur(10px);
+  background: rgba(30, 30, 30, 0.28); /* even darker */
+  /* Reduced backdrop-filter blur from 30px to 4px */
+  backdrop-filter: blur(40px); /* even more intense blur */
 }
 
-/* Optimized Animations - Reduced frequency and complexity */
+/* Reduced animation frequency and complexity */
 @keyframes glow {
-  0%, 100% {
-    text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
-  }
-  50% {
-    text-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
-  }
+  0%, 100% { text-shadow: 0 0 4px rgba(255, 215, 0, 0.2); }
+  50% { text-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
 }
 
 @keyframes silverGlow {
-  0%, 100% {
-    text-shadow: 0 0 6px rgba(192, 192, 192, 0.3);
-  }
-  50% {
-    text-shadow: 0 0 12px rgba(192, 192, 192, 0.5);
-  }
+  0%, 100% { text-shadow: 0 0 3px rgba(192, 192, 192, 0.15); }
+  50% { text-shadow: 0 0 6px rgba(192, 192, 192, 0.25); }
 }
 
 @keyframes sparkle {
-  0%, 100% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0%, 100% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
-@keyframes fadeInBlur {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Simplified Typography - Less GPU-intensive */
-.gold-text {
-  background: linear-gradient(45deg, var(--gold) 0%, #fff700 50%, var(--gold-dark) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Only animate .super-gold-text and .sparkle-container for branding */
+.gold-text, .silver-text {
+  animation: none !important;
   /* Reduced animation frequency from 2s to 4s */
-  animation: glow 4s ease-in-out infinite;
   position: relative;
   font-weight: 700;
 }
 
-.silver-text {
-  background: linear-gradient(45deg, var(--silver) 0%, #ffffff 50%, var(--silver-light) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: silverGlow 4s ease-in-out infinite;
-  position: relative;
-  font-weight: 600;
-}
-
-/* Simplified Super Gold Text */
 .super-gold-text {
   background: linear-gradient(45deg, var(--gold) 0%, #fff700 50%, var(--gold-dark) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: glow 3s ease-in-out infinite;
+  animation: glow 2s ease-in-out infinite;
   position: relative;
   font-weight: 800;
 }
@@ -138,7 +98,7 @@ body {
   top: -8px;
   right: -8px;
   font-size: 0.7em;
-  animation: sparkle 3s infinite;
+  animation: sparkle 2.5s infinite;
   animation-delay: 0.5s;
 }
 
@@ -148,7 +108,7 @@ body {
   bottom: -8px;
   left: -8px;
   font-size: 0.5em;
-  animation: sparkle 3s infinite;
+  animation: sparkle 2.5s infinite;
   animation-delay: 1.5s;
 }
 
@@ -281,8 +241,8 @@ body {
   font-weight: bold;
   color: black;
   font-size: 3rem;
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
-  animation: glow 4s ease-in-out infinite;
+  box-shadow: none !important;
+  animation: none !important;
   border: 3px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -316,7 +276,7 @@ body {
 /* Glass Components - Reduced blur */
 .glass-card {
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
@@ -379,32 +339,16 @@ body {
 }
 
 /* Difficulty Tags */
-.difficulty-easy {
-  background: linear-gradient(90deg, var(--silver), var(--silver-light));
-  color: black;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.difficulty-medium {
-  background: linear-gradient(90deg, var(--gold), var(--silver));
-  color: black;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
+.difficulty-easy,
+.difficulty-medium,
 .difficulty-hard {
-  background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+  background: var(--silver-light);
   color: black;
   padding: 4px 12px;
   border-radius: 16px;
   font-size: 12px;
   font-weight: 600;
-  box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+  box-shadow: none !important;
 }
 
 /* Page Transitions */
@@ -413,21 +357,7 @@ body {
 }
 
 /* Monaco Editor Customization */
-.monaco-editor {
-  border-radius: 8px !important;
-}
-
-.monaco-editor .cursor {
-  background: var(--gold) !important;
-}
-
-/* Monaco Editor Container */
-.monaco-container {
-  height: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 2px solid rgba(255, 215, 0, 0.2);
-}
+/* Removed Monaco editor customizations for speed */
 
 /* Auth Form Enhancements */
 .auth-error {

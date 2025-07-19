@@ -1,6 +1,6 @@
 export async function executeCode(code: string, language: string, testCases: any[]) {
   // Simulate realistic code execution with language-specific behavior
-  const delay = (ms: number) => Promise.resolve(setTimeout(() => {}, ms))
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
   await delay(1000 + Math.random() * 1500) // Random delay 1-2.5 seconds
 
@@ -19,7 +19,7 @@ export async function executeCode(code: string, language: string, testCases: any
   const results = []
   let passedTests = 0
 
-  for (let i = 0; i < testCases.length; i++) {
+  for (let i = 0; i < Math.min(testCases.length, 3); i++) {
     const testCase = testCases[i]
     const passed = Math.random() > 0.3 // 70% chance of passing each test
 
@@ -46,7 +46,7 @@ export async function executeCode(code: string, language: string, testCases: any
     }
   }
 
-  const allPassed = passedTests === testCases.length
+  const allPassed = passedTests === Math.min(testCases.length, 3)
   const runtime = Math.floor(Math.random() * 200) + 50
   const memory = Math.floor(Math.random() * 20) + 30
 
@@ -62,7 +62,7 @@ export async function executeCode(code: string, language: string, testCases: any
   } else {
     return {
       success: false,
-      output: generateFailureOutput(results, passedTests, testCases.length),
+      output: generateFailureOutput(results, passedTests, Math.min(testCases.length, 3)),
       runtime: 0,
       memory: 0,
     }
@@ -121,7 +121,7 @@ function generateSuccessOutput(results: any[], runtime: number, memory: number, 
   const languageEmoji = {
     javascript: "🟨",
     python: "🐍",
-    java: "���",
+    java: "☕",
     cpp: "⚡",
   }
 
@@ -144,7 +144,7 @@ function generateSuccessOutput(results: any[], runtime: number, memory: number, 
 }
 
 function generateFailureOutput(results: any[], passed: number, total: number) {
-  let output = `❌ SUBMISSION FAILED\n\n`
+  let output = `❌ EXECUTION FAILED\n\n`
   output += `${passed}/${total} test cases passed\n\n`
 
   results.forEach((result) => {
@@ -170,6 +170,9 @@ function generateWrongOutput(expected: any) {
   }
   if (typeof expected === "string") {
     return JSON.stringify(expected.toLowerCase()) // Wrong case
+  }
+  if (typeof expected === "boolean") {
+    return JSON.stringify(!expected) // Opposite boolean
   }
   return JSON.stringify(null)
 }
