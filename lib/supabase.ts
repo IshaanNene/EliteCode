@@ -92,7 +92,7 @@ export async function fetchWithTimeout<T>(promise: Promise<T>, ms = 10000): Prom
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error("Request timed out")), ms)
   })
-  // Only call .finally() on the result of Promise.race, which is always a native Promise
+  // Use .then/.catch to clear timeout, not .finally on Supabase query
   return Promise.race([promise, timeoutPromise])
     .then((result) => {
       clearTimeout(timeoutId)
