@@ -24,7 +24,7 @@ export default function LoginPage() {
     if (error) {
       setError(error.message)
     } else {
-      router.push("/problems")
+      router.replace("/problems") // Use replace for smoother navigation, no reload
     }
 
     setLoading(false)

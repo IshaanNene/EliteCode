@@ -9,7 +9,7 @@ interface CodeEditorProps {
   language: string
   onLanguageChange: (language: string) => void
   onRun: () => void
-  onSubmit: () => void
+  onAIHelp: () => void
   isRunning: boolean
 }
 
@@ -67,7 +67,7 @@ export default function CodeEditor({
   language,
   onLanguageChange,
   onRun,
-  onSubmit,
+  onAIHelp,
   isRunning,
 }: CodeEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -128,6 +128,7 @@ export default function CodeEditor({
               value={language}
               onChange={(e) => onLanguageChange(e.target.value)}
               className="glass-input px-3 py-2 text-sm font-semibold"
+              disabled={isRunning}
             >
               {Object.entries(LANGUAGE_CONFIGS).map(([key, config]) => (
                 <option key={key} value={key}>
@@ -142,15 +143,23 @@ export default function CodeEditor({
           <div className="text-sm silver-text">
             Lines: {lineNumbers.length} | Chars: {value.length}
           </div>
-          <button onClick={onRun} disabled={isRunning} className="btn-silver text-sm px-4 py-2 flex items-center gap-2">
-            <span>Run</span>
-          </button>
           <button
-            onClick={onSubmit}
+            onClick={onAIHelp}
             disabled={isRunning}
-            className="btn-gold text-sm px-4 py-2 flex items-center gap-2"
+            className="btn-silver text-sm px-4 py-2 flex items-center gap-2"
           >
-            <span>{isRunning ? "Submitting..." : "Submit"}</span>
+            <span>🤖</span>
+            <span>AI Help</span>
+          </button>
+          <button onClick={onRun} disabled={isRunning} className="btn-gold text-sm px-6 py-2 flex items-center gap-2">
+            {isRunning ? (
+              <>
+                <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full"></div>
+                <span>Running...</span>
+              </>
+            ) : (
+              <span>Run & Test</span>
+            )}
           </button>
         </div>
       </div>
@@ -191,10 +200,10 @@ export default function CodeEditor({
           <span>•</span>
           <span>Real Compilation</span>
           <span>•</span>
-          <span>Secure Execution</span>
+          <span>AI Powered</span>
         </div>
         <div className="flex items-center gap-2 text-sm silver-text">
-          <span>Powered by Judge0 API</span>
+          <span>🤖 AI Assistant Available</span>
         </div>
       </div>
     </div>

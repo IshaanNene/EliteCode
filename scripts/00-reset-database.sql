@@ -178,26 +178,45 @@ CREATE TRIGGER trigger_update_user_stats
 -- Insert problems with multi-language starter_code
 INSERT INTO problems (title, difficulty, category, description, examples, constraints, starter_code, test_cases, acceptance_rate) VALUES
 (
-  'Two Sum',
-  'easy',
-  'Array',
-  'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
+  "Two Sum",
+  "easy",
+  "Array",
+  "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
   '[{"input": "nums = [2,7,11,15], target = 9", "output": "[0,1]", "explanation": "Because nums[0] + nums[1] == 9, we return [0, 1]."}]'::jsonb,
-  ARRAY['2 ≤ nums.length ≤ 10⁴', '-10⁹ ≤ nums[i] ≤ 10⁹', '-10⁹ ≤ target ≤ 10⁹', 'Only one valid answer exists.'],
+  ARRAY["2 ≤ nums.length ≤ 10⁴", "-10⁹ ≤ nums[i] ≤ 10⁹", "-10⁹ ≤ target ≤ 10⁹", "Only one valid answer exists."],
   '{
     "javascript": "function twoSum(nums, target) {\n    // Your code here\n    \n}",
     "python": "def two_sum(nums, target):\n    # Your code here\n    pass",
     "java": "public class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Your code here\n        \n    }\n}",
     "cpp": "#include <vector>\n#include <unordered_map>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        // Your code here\n        \n    }\n};"
   }'::jsonb,
-  '[{"input": [[2, 7, 11, 15], 9], "expected": [0, 1]}, {"input": [[3, 2, 4], 6], "expected": [1, 2]}, {"input": [[3, 3], 6], "expected": [0, 1]}]'::jsonb,
+  '[
+    {"input": [[2, 7, 11, 15], 9], "expected": [0, 1]},
+    {"input": [[3, 2, 4], 6], "expected": [1, 2]},
+    {"input": [[3, 3], 6], "expected": [0, 1]},
+    {"input": [[1, 2, 3, 4, 5], 8], "expected": [2, 4]},
+    {"input": [[5, 5, 11], 10], "expected": [0, 1]},
+    {"input": [[-1, -2, -3, -4, -5], -8], "expected": [2, 4]},
+    {"input": [[0, 4, 3, 0], 0], "expected": [0, 3]},
+    {"input": [[1, 1, 1, 1, 1, 4, 1, 1, 1, 1, 1, 7, 1, 1, 1, 1, 1], 11], "expected": [5, 11]},
+    {"input": [[230, 863, 916, 585, 981, 404, 316, 785, 88, 12, 70, 435, 384, 778, 887, 755, 740, 337, 86, 92, 325, 422, 815, 650, 920, 125, 277, 336, 221, 847, 168, 23, 677, 61, 400, 136, 874, 363, 394, 199, 863, 997, 794, 587, 124, 321, 212, 957, 764, 173, 314, 422, 927, 783, 930, 282, 306, 506, 44, 926, 691, 568, 68, 730, 933, 737, 531, 180, 414, 751, 28, 546, 60, 371, 493, 370, 527, 387, 43, 541, 13, 457, 328, 227, 652, 365, 430, 803, 59, 858, 538, 427, 583, 368, 375, 173, 809, 896, 370, 789], 542], "expected": [28, 45]},
+    {"input": [[-10, -1, -18, -3, -4, -7, -8], -11], "expected": [2, 4]},
+    {"input": [[1, 5, 3, 7], 8], "expected": [0, 3]},
+    {"input": [[2, 4, 6, 8], 10], "expected": [1, 3]},
+    {"input": [[10, 20, 30, 40], 50], "expected": [1, 3]},
+    {"input": [[-5, 0, 5, 10], 5], "expected": [0, 2]},
+    {"input": [[100, 200, 300, 400], 500], "expected": [1, 3]},
+    {"input": [[7, 14, 21, 28], 35], "expected": [2, 3]},
+    {"input": [[-2, -4, -6, -8], -10], "expected": [1, 3]},
+    {"input": [[0, 1, 2, 3, 4, 5], 9], "expected": [4, 5]}
+  ]'::jsonb,
   49.2
 ),
 (
-  'Valid Parentheses',
-  'easy',
-  'Stack',
-  'Given a string s containing just the characters ''('', '')'', ''{'', ''}'', ''['' and '']'', determine if the input string is valid.',
+  "Valid Parentheses",
+  "easy",
+  "Stack",
+  "Given a string s containing just the characters ''('', '')'', ''{'', ''}'', ''['' and '']'', determine if the input string is valid.",
   '[{"input": "s = \"()\"", "output": "true"}, {"input": "s = \"()[]{}\"", "output": "true"}, {"input": "s = \"(]\"", "output": "false"}]'::jsonb,
   ARRAY['1 ≤ s.length ≤ 10⁴', 's consists of parentheses only ''()[]{}''.'],
   '{
@@ -206,14 +225,35 @@ INSERT INTO problems (title, difficulty, category, description, examples, constr
     "java": "public class Solution {\n    public boolean isValid(String s) {\n        // Your code here\n        \n    }\n}",
     "cpp": "#include <string>\n#include <stack>\nusing namespace std;\n\nclass Solution {\npublic:\n    bool isValid(string s) {\n        // Your code here\n        \n    }\n};"
   }'::jsonb,
-  '[{"input": ["()"], "expected": true}, {"input": ["()[]{}"], "expected": true}, {"input": ["(]"], "expected": false}]'::jsonb,
+  '[
+    {"input": ["()"], "expected": true},
+    {"input": ["()[]{}"], "expected": true},
+    {"input": ["(]"], "expected": false},
+    {"input": ["([)]"], "expected": false},
+    {"input": ["{[]}"], "expected": true},
+    {"input": [""], "expected": true},
+    {"input": ["("], "expected": false},
+    {"input": [")"], "expected": false},
+    {"input": ["(("], "expected": false},
+    {"input": ["))"], "expected": false},
+    {"input": ["()()"], "expected": true},
+    {"input": ["(())"], "expected": true},
+    {"input": ["([{}])"], "expected": true},
+    {"input": ["([{]}]"], "expected": false},
+    {"input": ["(((((((((("], "expected": false},
+    {"input": ["))))))))"], "expected": false},
+    {"input": ["({[]})"], "expected": true},
+    {"input": ["({[}])"], "expected": false},
+    {"input": ["(){}[]"], "expected": true},
+    {"input": ["{()}[{}]"], "expected": true}
+  ]'::jsonb,
   40.7
 ),
 (
-  'Add Two Numbers',
-  'medium',
-  'Linked List',
-  'You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.',
+  "Add Two Numbers",
+  "medium",
+  "Linked List",
+  "You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list.",
   '[{"input": "l1 = [2,4,3], l2 = [5,6,4]", "output": "[7,0,8]", "explanation": "342 + 465 = 807."}]'::jsonb,
   ARRAY['The number of nodes in each linked list is in the range [1, 100].', '0 ≤ Node.val ≤ 9', 'It is guaranteed that the list represents a number that does not have leading zeros.'],
   '{
@@ -222,14 +262,25 @@ INSERT INTO problems (title, difficulty, category, description, examples, constr
     "java": "public class Solution {\n    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {\n        // Your code here\n        \n    }\n}",
     "cpp": "#include <iostream>\nusing namespace std;\n\nstruct ListNode {\n    int val;\n    ListNode *next;\n    ListNode() : val(0), next(nullptr) {}\n    ListNode(int x) : val(x), next(nullptr) {}\n    ListNode(int x, ListNode *next) : val(x), next(next) {}\n};\n\nclass Solution {\npublic:\n    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {\n        // Your code here\n        \n    }\n};"
   }'::jsonb,
-  '[{"input": [[[2,4,3], [5,6,4]]], "expected": [7,0,8]}]'::jsonb,
+  '[
+    {"input": [[[2,4,3], [5,6,4]]], "expected": [7,0,8]},
+    {"input": [[[0], [0]]], "expected": [0]},
+    {"input": [[[9,9,9,9,9,9,9], [9,9,9,9]]], "expected": [8,9,9,9,0,0,0,1]},
+    {"input": [[[1], [9,9]]], "expected": [0,0,1]},
+    {"input": [[[5], [5]]], "expected": [0,1]},
+    {"input": [[[1,8], [0]]], "expected": [1,8]},
+    {"input": [[[2,4,9], [5,6,4,9]]], "expected": [7,0,4,0,1]},
+    {"input": [[[9], [1,9,9,9,9,9,9,9,9,9]]], "expected": [0,0,0,0,0,0,0,0,0,0,1]},
+    {"input": [[[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1], [5,6,4]]], "expected": [6,6,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]},
+    {"input": [[[7,2,4,3], [5,6,4]]], "expected": [2,9,8,3]}
+  ]'::jsonb,
   37.8
 ),
 (
-  'Longest Substring Without Repeating Characters',
-  'medium',
-  'String',
-  'Given a string s, find the length of the longest substring without repeating characters.',
+  "Longest Substring Without Repeating Characters",
+  "medium",
+  "String",
+  "Given a string s, find the length of the longest substring without repeating characters.",
   '[{"input": "s = \"abcabcbb\"", "output": "3", "explanation": "The answer is \"abc\", with the length of 3."}]'::jsonb,
   ARRAY['0 ≤ s.length ≤ 5 * 10⁴', 's consists of English letters, digits, symbols and spaces.'],
   '{
@@ -238,14 +289,32 @@ INSERT INTO problems (title, difficulty, category, description, examples, constr
     "java": "public class Solution {\n    public int lengthOfLongestSubstring(String s) {\n        // Your code here\n        \n    }\n}",
     "cpp": "#include <string>\n#include <unordered_set>\nusing namespace std;\n\nclass Solution {\npublic:\n    int lengthOfLongestSubstring(string s) {\n        // Your code here\n        \n    }\n};"
   }'::jsonb,
-  '[{"input": ["abcabcbb"], "expected": 3}, {"input": ["bbbbb"], "expected": 1}, {"input": ["pwwkew"], "expected": 3}]'::jsonb,
+  '[
+    {"input": ["abcabcbb"], "expected": 3},
+    {"input": ["bbbbb"], "expected": 1},
+    {"input": ["pwwkew"], "expected": 3},
+    {"input": [""], "expected": 0},
+    {"input": [" "], "expected": 1},
+    {"input": ["au"], "expected": 2},
+    {"input": ["dvdf"], "expected": 3},
+    {"input": ["anviaj"], "expected": 5},
+    {"input": ["abcdef"], "expected": 6},
+    {"input": ["aab"], "expected": 2},
+    {"input": ["cdd"], "expected": 2},
+    {"input": ["abba"], "expected": 2},
+    {"input": ["tmmzuxt"], "expected": 5},
+    {"input": ["ohvhjdml"], "expected": 6},
+    {"input": ["wobgrovw"], "expected": 6},
+    {"input": ["nfhzongbcfzuvgwkzjpvhov"], "expected": 10},
+    {"input": ["bpfbhmipx"], "expected": 7}
+  ]'::jsonb,
   33.1
 ),
 (
-  'Merge Two Sorted Lists',
-  'easy',
-  'Linked List',
-  'You are given the heads of two sorted linked lists list1 and list2. Merge the two lists in a one sorted list.',
+  "Merge Two Sorted Lists",
+  "easy",
+  "Linked List",
+  "You are given the heads of two sorted linked lists list1 and list2. Merge the two lists in a one sorted list.",
   '[{"input": "list1 = [1,2,4], list2 = [1,3,4]", "output": "[1,1,2,3,4,4]"}]'::jsonb,
   ARRAY['The number of nodes in both lists is in the range [0, 50].', '-100 ≤ Node.val ≤ 100', 'Both list1 and list2 are sorted in non-decreasing order.'],
   '{
@@ -258,10 +327,10 @@ INSERT INTO problems (title, difficulty, category, description, examples, constr
   62.1
 ),
 (
-  'Best Time to Buy and Sell Stock',
-  'easy',
-  'Array',
-  'You are given an array prices where prices[i] is the price of a given stock on the ith day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.',
+  "Best Time to Buy and Sell Stock",
+  "easy",
+  "Array",
+  "You are given an array prices where prices[i] is the price of a given stock on the ith day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock.",
   '[{"input": "prices = [7,1,5,3,6,4]", "output": "5", "explanation": "Buy on day 2 (price = 1) and sell on day 5 (price = 6), profit = 6-1 = 5."}]'::jsonb,
   ARRAY['1 ≤ prices.length ≤ 10⁵', '0 ≤ prices[i] ≤ 10⁴'],
   '{
@@ -274,10 +343,10 @@ INSERT INTO problems (title, difficulty, category, description, examples, constr
   54.3
 ),
 (
-  'Maximum Subarray',
-  'medium',
-  'Dynamic Programming',
-  'Given an integer array nums, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.',
+  "Maximum Subarray",
+  "medium",
+  "Dynamic Programming",
+  "Given an integer array nums, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.",
   '[{"input": "nums = [-2,1,-3,4,-1,2,1,-5,4]", "output": "6", "explanation": "The subarray [4,-1,2,1] has the largest sum = 6."}]'::jsonb,
   ARRAY['1 ≤ nums.length ≤ 10⁵', '-10⁴ ≤ nums[i] ≤ 10⁴'],
   '{
@@ -290,10 +359,10 @@ INSERT INTO problems (title, difficulty, category, description, examples, constr
   47.8
 ),
 (
-  'Climbing Stairs',
-  'easy',
-  'Dynamic Programming',
-  'You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?',
+  "Climbing Stairs",
+  "easy",
+  "Dynamic Programming",
+  "You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?",
   '[{"input": "n = 2", "output": "2", "explanation": "There are two ways to climb to the top: 1. 1 step + 1 step, 2. 2 steps"}]'::jsonb,
   ARRAY['1 ≤ n ≤ 45'],
   '{
@@ -306,10 +375,10 @@ INSERT INTO problems (title, difficulty, category, description, examples, constr
   51.2
 ),
 (
-  'Binary Tree Inorder Traversal',
-  'easy',
-  'Tree',
-  'Given the root of a binary tree, return the inorder traversal of its nodes values.',
+  "Binary Tree Inorder Traversal",
+  "easy",
+  "Tree",
+  "Given the root of a binary tree, return the inorder traversal of its nodes values.",
   '[{"input": "root = [1,null,2,3]", "output": "[1,3,2]"}]'::jsonb,
   ARRAY['The number of nodes in the tree is in the range [0, 100].', '-100 ≤ Node.val ≤ 100'],
   '{
@@ -322,10 +391,10 @@ INSERT INTO problems (title, difficulty, category, description, examples, constr
   74.4
 ),
 (
-  'Validate Binary Search Tree',
-  'medium',
-  'Tree',
-  'Given the root of a binary tree, determine if it is a valid binary search tree (BST).',
+  "Validate Binary Search Tree",
+  "medium",
+  "Tree",
+  "Given the root of a binary tree, determine if it is a valid binary search tree (BST).",
   '[{"input": "root = [2,1,3]", "output": "true"}]'::jsonb,
   ARRAY['The number of nodes in the tree is in the range [1, 10⁴].', '-2³¹ ≤ Node.val ≤ 2³¹ - 1'],
   '{
@@ -338,10 +407,10 @@ INSERT INTO problems (title, difficulty, category, description, examples, constr
   31.5
 ),
 (
-  'Same Tree',
-  'easy',
-  'Tree',
-  'Given the roots of two binary trees p and q, write a function to check if they are the same or not.',
+  "Same Tree",
+  "easy",
+  "Tree",
+  "Given the roots of two binary trees p and q, write a function to check if they are the same or not.",
   '[{"input": "p = [1,2,3], q = [1,2,3]", "output": "true"}]'::jsonb,
   ARRAY['The number of nodes in both trees is in the range [0, 100].', '-10⁴ ≤ Node.val ≤ 10⁴'],
   '{

@@ -27,11 +27,8 @@ using namespace std;
 
 class Solution {
 public:
-    // Example for Two Sum problem
-    vector<int> solution(vector<int>& nums, int target) {
+    vector<int> twoSum(vector<int> &nums, int target) {
         // Your code here
-        
-        return {};
     }
 };`,
 }

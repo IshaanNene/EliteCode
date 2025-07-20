@@ -55,6 +55,9 @@ export default function SignupPage() {
       setError(error.message)
     } else {
       setSuccess("Welcome to EliteCode! Check your email to verify your account.")
+      setTimeout(() => {
+        router.replace("/problems") // Navigate after short delay
+      }, 1200)
     }
 
     setLoading(false)
