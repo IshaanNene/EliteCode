@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
-import { fetchWithTimeout, supabase } from "@/lib/supabase"
+import { supabase } from "@/lib/supabase"
 import { executeCodeWithJudge0 } from "@/lib/judge0-executor"
 import CodeEditor from "@/components/CodeEditor"
 import OutputPanel from "@/components/OutputPanel"
@@ -37,39 +37,16 @@ export default function EditorPage() {
   const params = useParams()
   const problemId = params.id as string
   const { user } = useAuth()
+  const [problem, setProblem] = useState<any>(null)
   const [code, setCode] = useState("")
   const [output, setOutput] = useState("")
   const [isRunning, setIsRunning] = useState(false)
   const [language, setLanguage] = useState("javascript")
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [problem, setProblem] = useState<any>(null)
-  const [testCases, setTestCases] = useState<any[]>([])
+  const [executionResult, setExecutionResult] = useState<any>(null)
 
   useEffect(() => {
-    async function loadProblem() {
-      setLoading(true)
-      setError(null)
-      try {
-        const { data, error } = await fetchWithTimeout(
-          supabase.from("problems").select("*").eq("id", problemId).single()
-        )
-        if (error || !data) throw new Error("Problem not found")
-        setProblem(data)
-
-        // Fetch test cases with timeout
-        const { data: tcData, error: tcError } = await fetchWithTimeout(
-          supabase.from("problem_test_cases").select("input, expected").eq("problem_id", problemId)
-        )
-        if (tcError || !tcData) throw new Error("Test cases not found")
-        setTestCases(tcData)
-      } catch (err: any) {
-        setError(err.message || "Failed to load problem")
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadProblem()
+    fetchProblem()
   }, [problemId])
 
   useEffect(() => {
@@ -82,6 +59,27 @@ export default function EditorPage() {
       setCode(DEFAULT_TEMPLATES[language as keyof typeof DEFAULT_TEMPLATES])
     }
   }, [language, problem])
+
+  const fetchProblem = async () => {
+    try {
+      const { data, error } = await supabase.from("problems").select("*").eq("id", problemId).single()
+
+      if (error) throw error
+
+      setProblem(data)
+
+      // Set initial code based on the starter_code from database
+      if (data.starter_code && data.starter_code.javascript) {
+        setCode(data.starter_code.javascript)
+      } else {
+        setCode(DEFAULT_TEMPLATES.javascript)
+      }
+    } catch (error) {
+      console.error("Error fetching problem:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleRun = async () => {
     if (!problem || !problem.test_cases) {
@@ -96,6 +94,7 @@ export default function EditorPage() {
       // Use first 3 test cases for run
       const result = await executeCodeWithJudge0(code, language, problem.test_cases.slice(0, 3), false)
       setOutput(result.output)
+      setExecutionResult(result)
     } catch (error) {
       console.error("Run error:", error)
       setOutput(`EXECUTION ERROR\n\n${(error as Error).message}`)
@@ -183,19 +182,18 @@ export default function EditorPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="loading-spinner" />
-        <span className="ml-4 text-lg font-semibold">Loading problems...</span>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl super-gold-text sparkle-container">Loading problem...</div>
       </div>
     )
   }
 
-  if (error) {
+  if (!problem) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-red-500 text-lg font-semibold">
-          {error} <br />
-          Please check your connection or try again later.
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl super-gold-text mb-4">Problem Not Found</div>
+          <div className="text-xl silver-text">The requested problem could not be loaded.</div>
         </div>
       </div>
     )
@@ -314,18 +312,18 @@ export default function EditorPage() {
 
         {/* Enhanced Execution Results */}
         <div className="p-6 pt-0 max-h-80 overflow-y-auto">
-          {testCases.length > 0 && (
+          {executionResult?.testResults && (
             <div className="backdrop-blur-xl bg-white/[0.08] border border-white/20 rounded-2xl p-6 shadow-xl">
               <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent">
                 Test Results
               </h3>
               
               <div className="space-y-4">
-                {testCases.map((testCase, index) => (
+                {executionResult.testResults.map((result: any) => (
                   <div 
-                    key={index} 
+                    key={result.testCase} 
                     className={`backdrop-blur-sm border rounded-xl p-4 transition-all duration-300 hover:shadow-lg ${
-                      testCase.status === "passed" 
+                      result.status === "passed" 
                         ? "bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-400/30" 
                         : "bg-gradient-to-r from-red-500/10 to-pink-500/10 border-red-400/30"
                     }`}
@@ -334,19 +332,19 @@ export default function EditorPage() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <span className={`w-3 h-3 rounded-full ${
-                          testCase.status === "passed" ? "bg-green-400 shadow-lg shadow-green-400/50" : "bg-red-400 shadow-lg shadow-red-400/50"
+                          result.status === "passed" ? "bg-green-400 shadow-lg shadow-green-400/50" : "bg-red-400 shadow-lg shadow-red-400/50"
                         }`}></span>
                         <span className="font-bold text-lg">
-                          Test Case {index + 1}
+                          Test Case {result.testCase}
                         </span>
                       </div>
                       
                       <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        testCase.status === "passed" 
+                        result.status === "passed" 
                           ? "bg-green-400/20 text-green-300 border border-green-400/30" 
                           : "bg-red-400/20 text-red-300 border border-red-400/30"
                       }`}>
-                        {testCase.status === "passed" ? "PASSED" : "FAILED"}
+                        {result.status === "passed" ? "PASSED" : "FAILED"}
                       </div>
                     </div>
 
@@ -355,20 +353,20 @@ export default function EditorPage() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                         <div className="backdrop-blur-sm bg-black/10 border border-white/10 rounded-lg p-3">
                           <div className="text-blue-300 font-medium mb-1">Input:</div>
-                          <code className="text-blue-100 break-all">{testCase.input}</code>
+                          <code className="text-blue-100 break-all">{result.input}</code>
                         </div>
                         
                         <div className="backdrop-blur-sm bg-black/10 border border-white/10 rounded-lg p-3">
                           <div className="text-green-300 font-medium mb-1">Expected:</div>
-                          <code className="text-green-100 break-all">{testCase.expected}</code>
+                          <code className="text-green-100 break-all">{result.expected}</code>
                         </div>
                         
                         <div className="backdrop-blur-sm bg-black/10 border border-white/10 rounded-lg p-3">
-                          <div className={`font-medium mb-1 ${testCase.status === "passed" ? "text-green-300" : "text-red-300"}`}>
+                          <div className={`font-medium mb-1 ${result.status === "passed" ? "text-green-300" : "text-red-300"}`}>
                             Your Output:
                           </div>
-                          <code className={`break-all ${testCase.status === "passed" ? "text-green-100" : "text-red-100"}`}>
-                            {testCase.actual}
+                          <code className={`break-all ${result.status === "passed" ? "text-green-100" : "text-red-100"}`}>
+                            {result.actual}
                           </code>
                         </div>
                       </div>
@@ -377,13 +375,13 @@ export default function EditorPage() {
                       <div className="flex justify-between items-center">
                         <div className="backdrop-blur-sm bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2">
                           <span className="text-yellow-300 font-medium">Runtime:</span>
-                          <span className="text-yellow-100 ml-2">{testCase.runtime}ms</span>
+                          <span className="text-yellow-100 ml-2">{result.runtime}ms</span>
                         </div>
                         
-                        {testCase.error && (
+                        {result.error && (
                           <div className="backdrop-blur-sm bg-red-500/10 border border-red-400/20 rounded-lg px-3 py-2 max-w-md">
                             <span className="text-red-300 font-medium">Error:</span>
-                            <span className="text-red-200 ml-2 text-sm">{testCase.error}</span>
+                            <span className="text-red-200 ml-2 text-sm">{result.error}</span>
                           </div>
                         )}
                       </div>
