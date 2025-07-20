@@ -84,27 +84,18 @@ export type ContestParticipant = {
 }
 
 /**
- * Utility to fetch data with a timeout (default 10s).
- * Fix: Only call .finally() on native Promise, not on Supabase query objects.
+ * Utility to fetch data from Supabase (no timeout).
+ * Improved: Returns empty array if no test cases found, and throws only on real errors.
  */
-export async function fetchWithTimeout<T>(promise: Promise<T>, ms = 10000): Promise<T> {
-  let timeoutId: NodeJS.Timeout
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error("Request timed out")), ms)
-  })
-  // Use .then/.catch to clear timeout, not .finally on Supabase query
-  return Promise.race([promise, timeoutPromise])
-    .then((result) => {
-      clearTimeout(timeoutId)
-      return result
-    })
-    .catch((err) => {
-      clearTimeout(timeoutId)
-      throw err
-    })
+export async function fetchWithGrace<T>(promise: Promise<T>): Promise<T> {
+  const result: any = await promise
+  // If result is a Supabase response, handle missing data gracefully
+  if (result && typeof result === "object" && "data" in result && "error" in result) {
+    if (result.error) throw result.error
+    // Return empty array if no test cases found, instead of throwing
+    if (Array.isArray(result.data)) return result.data as T
+    if (result.data === null || result.data === undefined) return [] as unknown as T
+  }
+  return result
 }
 
-// Usage example for fetching problems:
-// const { data, error } = await fetchWithTimeout(
-//   supabase.from("problems").select("*").order("id", { ascending: true })
-// )

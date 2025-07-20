@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { fetchWithTimeout, supabase } from "@/lib/supabase"
+import {supabase } from "@/lib/supabase"
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true)
@@ -14,7 +14,7 @@ export default function HomePage() {
       setLoading(true)
       setError(null)
       try {
-        const { data, error } = await fetchWithTimeout(
+        const { data, error } = await (
           supabase.from("problems").select("*").order("id", { ascending: true })
         )
         if (error || !data) throw new Error("Problems not found")
