@@ -183,7 +183,7 @@ export default function EditorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="loading-spinner" />
         <span className="ml-4 text-lg font-semibold">Loading problems...</span>
       </div>
@@ -192,7 +192,7 @@ export default function EditorPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-red-500 text-lg font-semibold">
           {error} <br />
           Please check your connection or try again later.
