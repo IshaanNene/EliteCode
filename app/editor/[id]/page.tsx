@@ -38,12 +38,12 @@ export default function EditorPage() {
   const problemId = params.id as string
   const { user } = useAuth()
   const [problem, setProblem] = useState<any>(null)
-  const [activeTab, setActiveTab] = useState("description")
   const [code, setCode] = useState("")
   const [output, setOutput] = useState("")
   const [isRunning, setIsRunning] = useState(false)
   const [language, setLanguage] = useState("javascript")
   const [loading, setLoading] = useState(true)
+  const [executionResult, setExecutionResult] = useState<any>(null)
 
   useEffect(() => {
     fetchProblem()
@@ -94,6 +94,7 @@ export default function EditorPage() {
       // Use first 3 test cases for run
       const result = await executeCodeWithJudge0(code, language, problem.test_cases.slice(0, 3), false)
       setOutput(result.output)
+      setExecutionResult(result)
     } catch (error) {
       console.error("Run error:", error)
       setOutput(`EXECUTION ERROR\n\n${(error as Error).message}`)
@@ -160,6 +161,25 @@ export default function EditorPage() {
     setIsRunning(false)
   }
 
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty?.toLowerCase()) {
+      case 'easy': return 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+      case 'medium': return 'bg-amber-500/20 text-amber-300 border-amber-400/30'
+      case 'hard': return 'bg-red-500/20 text-red-300 border-red-400/30'
+      default: return 'bg-slate-500/20 text-slate-300 border-slate-400/30'
+    }
+  }
+
+  const getCategoryColor = (category: string) => {
+    const colors = [
+      'bg-blue-500/20 text-blue-300 border-blue-400/30',
+      'bg-purple-500/20 text-purple-300 border-purple-400/30',
+      'bg-pink-500/20 text-pink-300 border-pink-400/30',
+      'bg-indigo-500/20 text-indigo-300 border-indigo-400/30',
+    ]
+    return colors[category?.length % colors.length] || colors[0]
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -183,80 +203,89 @@ export default function EditorPage() {
     <div className="min-h-screen flex page-enter">
       {/* Left Panel - Problem Description */}
       <div className="w-1/2 p-6 border-r border-white/20">
-        <div className="glass-card p-6 h-full">
-          <div className="flex items-center gap-4 mb-6">
-            <h1 className="text-3xl font-bold super-gold-text sparkle-container">{problem.title}</h1>
-            <span className={`difficulty-${problem.difficulty}`}>
-              {problem.difficulty.charAt(0).toUpperCase() + problem.difficulty.slice(1)}
-            </span>
-            <span className="text-sm silver-text bg-black/20 px-3 py-1 rounded-full">{problem.category}</span>
-          </div>
+        <div className="backdrop-blur-xl bg-white/[0.08] border border-white/20 rounded-2xl p-8 h-full shadow-2xl">
+          <div className="problem-details">
+            {/* Header Section */}
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-200 via-purple-200 to-cyan-200 bg-clip-text text-transparent">
+                {problem.title}
+              </h2>
+              
+              <div className="flex gap-3 mb-6">
+                <span className={`px-4 py-2 rounded-full text-sm font-semibold border backdrop-blur-sm ${getDifficultyColor(problem.difficulty)}`}>
+                  {problem.difficulty}
+                </span>
+                <span className={`px-4 py-2 rounded-full text-sm font-semibold border backdrop-blur-sm ${getCategoryColor(problem.category)}`}>
+                  {problem.category}
+                </span>
+              </div>
+            </div>
 
-          <div className="flex gap-4 mb-6">
-            {["description", "examples", "constraints"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`pb-2 px-1 border-b-2 transition-colors ${
-                  activeTab === tab ? "border-gold gold-text" : "border-transparent silver-text hover:gold-text"
-                }`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
+            {/* Description Section */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-3 text-cyan-200">Problem Description</h3>
+              <div className="backdrop-blur-sm bg-white/[0.05] border border-white/10 rounded-xl p-5 text-gray-200 leading-relaxed">
+                {problem.description}
+              </div>
+            </div>
 
-          <div className="space-y-4 overflow-y-auto max-h-96">
-            {activeTab === "description" && <div className="silver-text leading-relaxed">{problem.description}</div>}
+            {/* Stats Section */}
+            <div className="mb-8 grid grid-cols-3 gap-4">
+              <div className="backdrop-blur-sm bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-400/20 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-green-300">{problem.acceptance_rate}%</div>
+                <div className="text-sm text-green-200">Acceptance Rate</div>
+              </div>
+              
+              <div className="backdrop-blur-sm bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-400/20 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-blue-300">{problem.test_cases?.length || 0}</div>
+                <div className="text-sm text-blue-200">Test Cases</div>
+              </div>
+              
+              <div className="backdrop-blur-sm bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-400/20 rounded-xl p-4 text-center">
+                <div className="text-xl font-bold text-purple-300">Judge0</div>
+                <div className="text-sm text-purple-200">Powered</div>
+              </div>
+            </div>
 
-            {activeTab === "examples" && (
-              <div className="space-y-4">
-                {problem.examples?.map((example: any, index: number) => (
-                  <div key={index} className="bg-black/20 p-4 rounded-lg">
-                    <div className="gold-text font-semibold mb-2">Example {index + 1}:</div>
-                    <div className="silver-text space-y-1">
-                      <div>
-                        <strong>Input:</strong> {example.input}
-                      </div>
-                      <div>
-                        <strong>Output:</strong> {example.output}
-                      </div>
-                      {example.explanation && (
+            {/* Examples Section */}
+            {problem.examples && problem.examples.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-cyan-200">Examples</h3>
+                <div className="space-y-3">
+                  {problem.examples.map((ex: any, i: number) => (
+                    <div key={i} className="backdrop-blur-sm bg-white/[0.05] border border-white/10 rounded-lg p-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <strong>Explanation:</strong> {example.explanation}
+                          <span className="text-blue-300 font-medium">Input:</span>
+                          <code className="block mt-1 p-2 bg-black/20 rounded text-blue-100">{ex.input}</code>
                         </div>
-                      )}
+                        <div>
+                          <span className="text-green-300 font-medium">Output:</span>
+                          <code className="block mt-1 p-2 bg-black/20 rounded text-green-100">{ex.output}</code>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
 
-            {activeTab === "constraints" && (
-              <div className="space-y-2">
-                {problem.constraints?.map((constraint: string, index: number) => (
-                  <div key={index} className="silver-text">
-                    • {constraint}
-                  </div>
-                ))}
+            {/* Constraints Section */}
+            {problem.constraints && problem.constraints.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-cyan-200">Constraints</h3>
+                <div className="backdrop-blur-sm bg-white/[0.05] border border-white/10 rounded-xl p-5">
+                  <ul className="space-y-2 text-gray-200">
+                    {problem.constraints.map((c: string, i: number) => (
+                      <li key={i} className="flex items-start">
+                        <span className="text-yellow-400 mr-3">•</span>
+                        <span>{c}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             )}
-          </div>
-
-          {/* Problem Stats */}
-          <div className="mt-6 pt-4 border-t border-white/20">
-            <div className="flex justify-between text-sm">
-              <span className="silver-text">Acceptance Rate:</span>
-              <span className="gold-text font-semibold">{problem.acceptance_rate}%</span>
-            </div>
-            <div className="flex justify-between text-sm mt-2">
-              <span className="silver-text">Test Cases:</span>
-              <span className="gold-text font-semibold">{problem.test_cases?.length || 0} total</span>
-            </div>
-            <div className="flex justify-between text-sm mt-2">
-              <span className="silver-text">Execution:</span>
-              <span className="gold-text font-semibold">Judge0 Powered</span>
-            </div>
           </div>
         </div>
       </div>
@@ -279,6 +308,89 @@ export default function EditorPage() {
         {/* Output Panel */}
         <div className="h-64 p-6 pt-0">
           <OutputPanel output={output} isRunning={isRunning} />
+        </div>
+
+        {/* Enhanced Execution Results */}
+        <div className="p-6 pt-0 max-h-80 overflow-y-auto">
+          {executionResult?.testResults && (
+            <div className="backdrop-blur-xl bg-white/[0.08] border border-white/20 rounded-2xl p-6 shadow-xl">
+              <h3 className="text-lg font-semibold mb-4 bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent">
+                Test Results
+              </h3>
+              
+              <div className="space-y-4">
+                {executionResult.testResults.map((result: any) => (
+                  <div 
+                    key={result.testCase} 
+                    className={`backdrop-blur-sm border rounded-xl p-4 transition-all duration-300 hover:shadow-lg ${
+                      result.status === "passed" 
+                        ? "bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-400/30" 
+                        : "bg-gradient-to-r from-red-500/10 to-pink-500/10 border-red-400/30"
+                    }`}
+                  >
+                    {/* Test Case Header */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className={`w-3 h-3 rounded-full ${
+                          result.status === "passed" ? "bg-green-400 shadow-lg shadow-green-400/50" : "bg-red-400 shadow-lg shadow-red-400/50"
+                        }`}></span>
+                        <span className="font-bold text-lg">
+                          Test Case {result.testCase}
+                        </span>
+                      </div>
+                      
+                      <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                        result.status === "passed" 
+                          ? "bg-green-400/20 text-green-300 border border-green-400/30" 
+                          : "bg-red-400/20 text-red-300 border border-red-400/30"
+                      }`}>
+                        {result.status === "passed" ? "PASSED" : "FAILED"}
+                      </div>
+                    </div>
+
+                    {/* Test Case Details */}
+                    <div className="grid gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                        <div className="backdrop-blur-sm bg-black/10 border border-white/10 rounded-lg p-3">
+                          <div className="text-blue-300 font-medium mb-1">Input:</div>
+                          <code className="text-blue-100 break-all">{result.input}</code>
+                        </div>
+                        
+                        <div className="backdrop-blur-sm bg-black/10 border border-white/10 rounded-lg p-3">
+                          <div className="text-green-300 font-medium mb-1">Expected:</div>
+                          <code className="text-green-100 break-all">{result.expected}</code>
+                        </div>
+                        
+                        <div className="backdrop-blur-sm bg-black/10 border border-white/10 rounded-lg p-3">
+                          <div className={`font-medium mb-1 ${result.status === "passed" ? "text-green-300" : "text-red-300"}`}>
+                            Your Output:
+                          </div>
+                          <code className={`break-all ${result.status === "passed" ? "text-green-100" : "text-red-100"}`}>
+                            {result.actual}
+                          </code>
+                        </div>
+                      </div>
+
+                      {/* Runtime and Error Info */}
+                      <div className="flex justify-between items-center">
+                        <div className="backdrop-blur-sm bg-white/[0.05] border border-white/10 rounded-lg px-3 py-2">
+                          <span className="text-yellow-300 font-medium">Runtime:</span>
+                          <span className="text-yellow-100 ml-2">{result.runtime}ms</span>
+                        </div>
+                        
+                        {result.error && (
+                          <div className="backdrop-blur-sm bg-red-500/10 border border-red-400/20 rounded-lg px-3 py-2 max-w-md">
+                            <span className="text-red-300 font-medium">Error:</span>
+                            <span className="text-red-200 ml-2 text-sm">{result.error}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

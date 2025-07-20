@@ -40,7 +40,8 @@ export async function executeCodeWithJudge0(
       throw new Error("No test cases available")
     }
 
-    const casesToRun = isSubmission ? testCases : testCases.slice(0, 3)
+    // Always run all test cases
+    const casesToRun = testCases
     const testResults: TestResult[] = []
     let totalRuntime = 0
 
@@ -584,12 +585,15 @@ function generateExecutionOutput(
  */
 export async function fetchProblemTestCases(problemId: number): Promise<any[]> {
   const { data, error } = await supabase
-    .from("problems")
-    .select("test_cases")
-    .eq("id", problemId)
-    .single()
+    .from("problem_test_cases")
+    .select("input, expected")
+    .eq("problem_id", problemId)
+    .order("id", { ascending: true })
   if (error || !data) throw new Error("Problem not found or error fetching test cases")
-  return data.test_cases
+  return data.map((row) => ({
+    input: row.input,
+    expected: row.expected,
+  }))
 }
 
 // Usage example (replace previous usage):
