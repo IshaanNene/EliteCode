@@ -1,6 +1,8 @@
+"use client"
+
 import Link from "next/link"
-import { fetchWithTimeout, supabase } from "@/lib/supabase"
 import { useState, useEffect } from "react"
+import { fetchWithTimeout, supabase } from "@/lib/supabase"
 
 export default function HomePage() {
   const [loading, setLoading] = useState(true)
