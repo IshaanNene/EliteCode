@@ -16,6 +16,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/Copilot_20250720_120704.png" type="image/png" />
+      </head>
       <body>
         <div className="holi-background" />
         <div className="glass-overlay" />
