@@ -82,3 +82,22 @@ export type ContestParticipant = {
   finish_time?: string
   created_at: string
 }
+
+/**
+ * Utility to fetch data with a timeout (default 10s).
+ */
+export async function fetchWithTimeout<T>(promise: Promise<T>, ms = 10000): Promise<T> {
+  let timeout: NodeJS.Timeout
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => reject(new Error("Request timed out")), ms)
+  })
+  return Promise.race([
+    promise.finally(() => clearTimeout(timeout)),
+    timeoutPromise,
+  ])
+}
+
+// Usage example for fetching problems:
+// const { data, error } = await fetchWithTimeout(
+//   supabase.from("problems").select("*").order("id", { ascending: true })
+// )
